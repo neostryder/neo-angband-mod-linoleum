@@ -109,6 +109,22 @@ Third-party tile sets are a licensing question per set, not a technical one: con
 a sheet into a loose pack is a *modification* of the art, which not every tileset
 licence permits. Convert your own copies freely; check before you share.
 
+## Working on this repo
+
+This repository is public, and so is the main one. A privacy scan refuses a handful
+of strings in either — see `CONTRIBUTING.md` in
+[neo-angband](https://github.com/neostryder/neo-angband). The scanner lives there and
+is used from there rather than copied here, so there is nothing to install; point this
+clone's hooks at it once:
+
+```sh
+git config core.hooksPath /path/to/neo-angband/.githooks
+```
+
+That is the gate that sees a **new** file before it is committed. The `privacy`
+workflow is the later one — it reads tracked files, so by the time it can see a new
+file the bytes are already published. Both, not either.
+
 ## Licence
 
 Same dual licence as Neo Angband and Angband — GPL v2 or the Angband licence. See
