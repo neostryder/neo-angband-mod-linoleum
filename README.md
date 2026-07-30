@@ -23,12 +23,25 @@ directory of individual images addressed by readable names:
 
 ```
 my-pack/
-  manifest.txt
-  maps/targets.txt      feat / trap / monster / object / flavour, by name
-  maps/families.txt     shared effect metadata
-  maps/pools.txt        variant pools
-  tiles/monster/orc.png
-  tiles/feat/granite-wall.png
+  manifest.txt              pack id, format, resolution, which maps to read
+  maps/
+    targets.txt             feat / trap / monster / object / flavour, by name
+    families.txt            shared effect metadata (only when authored)
+    pools.txt               variant pools (only when authored)
+  images/8/                 one PNG per tile, named for what it draws
+    feat_granite_lit_0.png
+    monster_cave_orc_0.png
+  graf-*.prf, xtra-*.prf,   the source tileset's own pref files, mirrored
+  flvr-*.prf                (present in a converted pack, optional in yours)
+```
+
+The `images/` subdirectory is the tile resolution in pixels — `images/8/` for an 8x8
+set, `images/32/` for a 32x32 one — and it matches the `resolution:` line in
+`manifest.txt`. A target map entry then names an image by base name with no path or
+extension:
+
+```
+target:feat:GRANITE:asset:feat_granite_lit_0
 ```
 
 You edit one file at a time, and the map says what it is for in words.
@@ -42,11 +55,32 @@ It also does two things a fixed sheet cannot:
 
 ## Building a pack
 
-The converter turns a conventional tileset into a loose pack:
+The converter turns a conventional tileset into a loose pack. It lives in the main
+repository and is **not published to a package registry** — it is a workspace tool, so
+you run it from a clone rather than fetching it:
 
 ```bash
-npx @neo-angband/linoleum convert path/to/tileset --out my-pack
+git clone https://github.com/neostryder/neo-angband.git
 ```
+
+```bash
+cd neo-angband && pnpm install && pnpm build
+```
+
+```bash
+node packages/linoleum/dist/cli.js --packs original-tiles --out ./my-packs
+```
+
+`--tiles <dir>` is the tiles root to read (default `reference/lib/tiles`, the Angband
+4.2.6 tree that ships in that repo), `--out <dir>` is where packs are written, and
+`--packs <keys>` picks which to convert. `--help` lists the keys. It converts the six
+tilesets Angband itself ships — `original-tiles`, `adam-bolt`, `gervais`, `nomad`,
+`shockbolt-dark`, `shockbolt-light` — driven by each one's `graf`/`xtra`/`flvr` pref
+files. To convert a tileset from somewhere else you add its geometry and pref-file
+names to `ALL_PACKS` in `packages/linoleum/src/packs.ts`; there is no
+arbitrary-tileset mode on the command line. And nothing stops you writing a pack by
+hand — the format is text plus PNGs, and the converter is a convenience, not a
+gatekeeper.
 
 Then point a `tilePacks` entry at the result:
 
@@ -68,17 +102,22 @@ See
 [docs/LINOLEUM.md](https://github.com/neostryder/neo-angband/blob/master/docs/LINOLEUM.md)
 in the main repository for the format in full.
 
-**Packs you build are yours.** None are redistributed here. If you convert a tileset,
-the result carries whatever licence the original art carried — converting does not
-change who owns it, and some tile sets do not permit modification at all. Check before
-you share.
+**Packs you build are yours, and the art in them is not ours to license.** No
+converted pack is redistributed here or with the game. If you convert a tileset the
+result carries whatever licence the original art carried: converting does not change
+who owns it, and **a conversion is a modification** — it cuts one sheet into hundreds
+of separate images — so a licence that permits redistribution but not modification does
+not permit a converted pack at all. Angband's own Shockbolt set is exactly that case.
+Convert your own copies freely for your own use; check the licence before you share
+one. Per-set terms are in
+[public/tiles/CREDITS.md](https://github.com/neostryder/neo-angband/blob/master/packages/web/public/tiles/CREDITS.md).
 
 ## Installing
 
-`dist/neo-linoleum.zip` is the installable form of this mod: the manifest, this
-README, the licence, and the `original-tiles` demo pack — 1508 files, 534 KB. It is
-what the game's installer downloads, and it is checked against a digest the game
-ships with before a single byte is unzipped.
+`dist/neo-linoleum.zip` is the installable form of this mod: **1508 entries, 535 KiB** —
+the `original-tiles` demo pack (1505 files, of which 1499 are tile PNGs) plus the
+manifest, this README and the licence. It is what the game's installer downloads, and
+it is checked against a digest the game ships with before a single byte is unzipped.
 
 You can also just use the folder: clone this repository into your mods directory (or
 point the browser build at it with **Load mod folder**) and run
@@ -87,9 +126,9 @@ point the browser build at it with **Load mod folder**) and run
 <details>
 <summary>Why an archive rather than 1505 committed files</summary>
 
-The demo pack is one PNG per tile. An `archive` payload is one HTTP request and one
-digest; the alternative is one request per file, so a 1505-request install is not a
-real option. The archive holds the *whole* mod because an installed mod's file list is
+The demo pack is one PNG per tile — 1499 of them. An `archive` payload is one HTTP
+request and one digest; the alternative is one request per file, so a 1505-request
+install is not a real option. The archive holds the *whole* mod because an installed mod's file list is
 whatever the archive contained, and the game's shared validator wants a top-level
 `manifest.json` from every source alike. That duplicates three text files, so
 `tools/pack.mjs --verify` fails if the committed archive has drifted from the working
@@ -103,7 +142,24 @@ gives the same bytes.
 
 ## Status
 
-The engine, the format and the demo pack are built and in use.
+**0.9.0 — complete and working, held one notch below 1.0 on purpose.** The engine, the
+format, the converter and the demo pack are all built and in use, and the chain has
+been measured end to end rather than assumed: the converter's 1499 output PNGs are each
+pixel-identical to the cell of the source tilesheet that Angband's own `graf-*.prf`
+says they came from; enabling this mod adds exactly one row to the Graphics screen and
+disabling it removes that row and nothing else; and choosing that row draws the map
+through the loose-pack engine — same 1110 tiled cells as the tilesheet engine on the
+same view, agreeing on ~96% of map pixels, with the remainder on cell seams where the
+two engines round an 8-pixel source to a fractional destination height differently.
+`packages/web/src/linoleum-equivalence.test.ts` in the main repository holds the
+mechanical form of the first claim for **all four** bundled tilesets, not just this one.
+
+What 1.0 is waiting on is exposure, not a known defect: this format has been driven by
+one author against four tilesets, and a version number is a promise about stability
+that a pack format should not make until someone else has authored a pack with it. If
+you build one and something in the format fights you, that is the feedback that moves
+this to 1.0. Until then treat `manifest.txt` and the map syntax as settled-in-practice
+but not frozen.
 
 Third-party tile sets are a licensing question per set, not a technical one: converting
 a sheet into a loose pack is a *modification* of the art, which not every tileset
