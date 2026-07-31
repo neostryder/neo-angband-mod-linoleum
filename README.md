@@ -8,10 +8,11 @@ disabling it leaves the game's own graphics untouched.
 
 ## What it is not
 
-Neo Angband already ships the four tile sets Angband itself distributes — Original,
-Adam Bolt, David Gervais and Nomad. Those are **core content**: they appear in the
-Graphics screen with no mod enabled, drawn by the classic tilesheet engine, exactly as
-upstream. Nothing here is needed to see them, and nothing here replaces them.
+Neo Angband already ships the five tile sets Angband itself distributes — Original,
+Adam Bolt, David Gervais, Nomad and Shockbolt, the last catalogued as two modes, Dark
+and Light. Those are **core content**: all six rows appear in the Graphics screen with
+no mod enabled, drawn by the classic tilesheet engine, exactly as upstream. Nothing
+here is needed to see them, and nothing here replaces them.
 
 ## What it adds
 
@@ -102,22 +103,29 @@ See
 [docs/LINOLEUM.md](https://github.com/neostryder/neo-angband/blob/master/docs/LINOLEUM.md)
 in the main repository for the format in full.
 
-**Packs you build are yours, and the art in them is not ours to license.** No
-converted pack is redistributed here or with the game. If you convert a tileset the
-result carries whatever licence the original art carried: converting does not change
-who owns it, and **a conversion is a modification** — it cuts one sheet into hundreds
-of separate images — so a licence that permits redistribution but not modification does
-not permit a converted pack at all. Angband's own Shockbolt set is exactly that case.
-Convert your own copies freely for your own use; check the licence before you share
-one. Per-set terms are in
-[public/tiles/CREDITS.md](https://github.com/neostryder/neo-angband/blob/master/packages/web/public/tiles/CREDITS.md).
+**Packs you build are yours, and the art in them is not ours to license.** If you
+convert a tileset the result carries whatever licence the original art carried:
+converting does not change who owns it, and **a conversion is a modification** — it
+cuts one sheet into hundreds of separate images — so a licence that permits
+redistribution but not modification does not permit a converted pack at all.
+Angband's own licence for the Shockbolt set is exactly that case; Neo Angband
+converts and bundles it under permission its author granted that project
+specifically, which does not travel to a pack you extract from a build. Convert your
+own copies freely for your own use; check the licence before you share one.
+[CREDITS.md](CREDITS.md) is this mod's attribution, and it is where those per-set
+terms are spelled out.
 
 ## Installing
 
-`dist/neo-linoleum.zip` is the installable form of this mod: **1508 entries, 535 KiB** —
-the `original-tiles` demo pack (1505 files, of which 1499 are tile PNGs) plus the
-manifest, this README and the licence. It is what the game's installer downloads, and
-it is checked against a digest the game ships with before a single byte is unzipped.
+`dist/neo-linoleum.zip` is the installable form of this mod: the `original-tiles` demo
+pack (1505 files, of which 1499 are tile PNGs) plus the manifest, this README, the
+licence and [CREDITS.md](CREDITS.md). It is what the game's installer downloads, and it
+is checked against a digest the game ships with before a single byte is unzipped.
+
+That is one of the six packs the manifest declares. The other five are a player's own
+build — a 64x64 pack is 15 MB of generated PNGs — and a declared pack that is not
+present is not a broken row: the engine finds no `manifest.txt` and that row falls back
+to ASCII, exactly as a missing tilesheet does.
 
 You can also just use the folder: clone this repository into your mods directory (or
 point the browser build at it with **Load mod folder**) and run
@@ -130,7 +138,7 @@ The demo pack is one PNG per tile — 1499 of them. An `archive` payload is one 
 request and one digest; the alternative is one request per file, so a 1505-request
 install is not a real option. The archive holds the *whole* mod because an installed mod's file list is
 whatever the archive contained, and the game's shared validator wants a top-level
-`manifest.json` from every source alike. That duplicates three text files, so
+`manifest.json` from every source alike. That duplicates four text files, so
 `tools/pack.mjs --verify` fails if the committed archive has drifted from the working
 tree, and CI runs it on every push.
 
@@ -146,16 +154,18 @@ gives the same bytes.
 format, the converter and the demo pack are all built and in use, and the chain has
 been measured end to end rather than assumed: the converter's 1499 output PNGs are each
 pixel-identical to the cell of the source tilesheet that Angband's own `graf-*.prf`
-says they came from; enabling this mod adds exactly one row to the Graphics screen and
-disabling it removes that row and nothing else; and choosing that row draws the map
-through the loose-pack engine — same 1110 tiled cells as the tilesheet engine on the
-same view, agreeing on ~96% of map pixels, with the remainder on cell seams where the
-two engines round an 8-pixel source to a fractional destination height differently.
-`packages/web/src/linoleum-equivalence.test.ts` in the main repository holds the
-mechanical form of the first claim for **all four** bundled tilesets, not just this one.
+says they came from; enabling this mod adds its six Graphics rows and disabling it
+removes them and nothing else, leaving the game's own six untouched; and choosing one
+draws the map through the loose-pack engine — same 1110 tiled cells as the tilesheet
+engine on the same view, agreeing on ~96% of map pixels, with the remainder on cell
+seams where the two engines round an 8-pixel source to a fractional destination height
+differently. `packages/web/src/linoleum-equivalence.test.ts` in the main repository
+holds the mechanical form of the first claim for **five** bundled packs, not just this
+one — Shockbolt included, which is what turned up a comparator that cropped 64x64 out
+of a double-height 64x128 tile.
 
 What 1.0 is waiting on is exposure, not a known defect: this format has been driven by
-one author against four tilesets, and a version number is a promise about stability
+one author against five tilesets, and a version number is a promise about stability
 that a pack format should not make until someone else has authored a pack with it. If
 you build one and something in the format fights you, that is the feedback that moves
 this to 1.0. Until then treat `manifest.txt` and the map syntax as settled-in-practice
