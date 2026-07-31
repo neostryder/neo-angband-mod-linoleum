@@ -27,10 +27,15 @@ Some tile sets used with Angband are considerably more restrictive than the lice
 above. Angband's own license for the Shockbolt set permits no modification, no use
 outside Angband, and no commercial use without a purchased license — and a conversion
 to the loose-pack format is a modification. Sets like that may not be redistributed
-here or anywhere else without the artist's explicit permission. Neo Angband has that
-permission for the Shockbolt set, granted to that project specifically and conditional
-on it remaining non-commercial; it is not a permission this repository holds or can
-pass on.
+without the artist's explicit permission.
+
+The two converted Shockbolt packs in `dist/` are here under permission the author
+granted **Neo Angband**, of which this repository is a part — the first-party mod that
+delivers the converted form, by the same author, under the same non-commercial
+condition. That permission is not something this repository holds independently and it
+is **not** something it can pass on: not to a fork, not to a pack extracted from one of
+these archives, not to another project that vendors them. Contact the author for
+permission to use that set in a project of your own.
 
 If you publish a pack, state the art's license in it. [CREDITS.md](CREDITS.md) is this
 mod's attribution and states the per-set terms.

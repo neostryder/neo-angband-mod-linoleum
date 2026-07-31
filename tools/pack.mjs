@@ -1,42 +1,37 @@
 #!/usr/bin/env node
 /**
- * Build (or verify) `dist/neo-linoleum.zip`, the installable form of this mod.
+ * Build (or verify) the installable archives under `dist/` - what this mod actually
+ * ships.
  *
- * WHY AN ARCHIVE AND NOT 1505 COMMITTED FILES. The demo tile pack is one PNG per
- * tile: 1505 files, 2.3 MB. The game's installer fetches an `archive` payload as a
- * SINGLE request, checks one digest, and unzips only after the digest matches
+ * WHY ARCHIVES AND NOT 9161 COMMITTED FILES. A loose pack is one PNG per tile:
+ * measured, the six packs are 9161 files and 42 MiB. The game's installer fetches an
+ * `archive` payload, checks a digest, and unzips only after the digest matches
  * (packages/web/src/mod-install.ts). The alternative - a `files` payload - is one
- * HTTP request per file, so a 1505-request install is not a real option. The
- * archive is therefore the shape the installer already expects, not a convenience.
+ * HTTP request per file, and 9161 requests is not an install.
  *
- * WHY THE ARCHIVE HOLDS THE WHOLE MOD. An installed mod's file list IS what the
- * archive contained, and the shared validator (readModDir) requires a top-level
- * manifest.json like every other source. So manifest.json / README.md / LICENSE.md /
- * CREDITS.md travel inside the zip beside the pack directory. That duplicates them,
- * and duplication drifts - which is what `--verify` is for, and why CI runs it:
- * editing manifest.json without rebuilding is caught here rather than by a player
- * whose installed mod behaves like last week's.
+ * WHY SEVEN ARCHIVES AND NOT ONE. Measured: 42 MiB of loose art becomes 24.6 MiB of
+ * zip, the largest pack 10.6 MiB. As ONE archive that is a 24.6 MiB blob rewritten in
+ * full whenever a single tile changes, carrying one digest whose failure says only
+ * "something in here is wrong". Per pack, a digest names which pack failed, a fix
+ * rewrites one file, and the installer is free to offer a subset later. So: one
+ * archive per tile pack, plus one small archive for the mod's own root files.
  *
- * ONE PACK, SIX DECLARED. The manifest declares all six tile sets Angband ships
- * (grafID 101-106); the archive carries ONE of them, the cheap 8x8 demo, because a
- * 64x64 pack is 15 MB of generated PNGs and the other five are a player's own build.
- * A declared pack that is not present is not a broken row - the engine finds no
- * manifest.txt and that row falls back to ASCII, exactly as a missing tilesheet does.
- * So this script takes the pack it is given and checks its NAME against the declared
- * paths, rather than requiring the manifest to declare exactly what the zip holds.
- * It used to require exactly one, which is what made it exit 1 - and the `archive`
- * workflow red - from the commit that declared all six onward.
+ * WHY THE ROOT FILES GET THEIR OWN ARCHIVE. An installed mod's file list IS what its
+ * archives contained, and the shared validator (readModDir) requires a top-level
+ * manifest.json like every other source. Those files therefore have to be inside
+ * SOMETHING - but inside all seven they would collide, and the installer rejects a
+ * path that arrives from two archives rather than silently keeping whichever unzipped
+ * last. One archive owns them.
  *
- * DETERMINISTIC. Entries sorted, timestamps fixed, stdlib zlib only. The digest is a
- * function of the CONTENT, so rebuilding on another machine produces the same bytes
- * and the same sha256 - which is what makes the digest the game ships worth pinning.
+ * DETERMINISTIC. Entries sorted, timestamps fixed, stdlib zlib only. A digest is a
+ * function of CONTENT, so rebuilding on another machine produces the same bytes and
+ * the same sha256 - which is what makes the digest the game ships worth pinning.
  *
- *   node tools/pack.mjs [--pack <dir>] [--out <file>] [--verify]
+ *   node tools/pack.mjs [--packs <dir>] [--verify] [--json]
  *
- * `--pack` is a built Linoleum pack directory. It is generated, not committed:
- * `pnpm --filter @neo-angband/web gen-linoleum-demo` in the main repository writes
- * it to packages/web/public/mods/linoleum/original-tiles, which is the default this
- * looks for in a sibling checkout.
+ * `--packs` is the directory holding the built pack directories; default `packs/`,
+ * which `tools/build-packs.mjs` writes and .gitignore excludes. `--json` prints
+ * path/sha256 pairs in the shape the game's RECOMMENDED_MODS catalogue wants.
  */
 
 import { createHash } from "node:crypto";
@@ -49,13 +44,16 @@ import {
   statSync,
   writeFileSync,
 } from "node:fs";
-import { basename, dirname, join, relative, resolve } from "node:path";
+import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
-/** Files from the repository root that travel inside the archive. */
+/** Files from the repository root that travel inside the mod archive. */
 const ROOT_FILES = ["manifest.json", "README.md", "LICENSE.md", "CREDITS.md"];
+
+/** The archive that carries ROOT_FILES, and nothing else. */
+const MOD_ARCHIVE = "neo-linoleum-mod.zip";
 
 const args = process.argv.slice(2);
 const flag = (name, fallback) => {
@@ -63,68 +61,42 @@ const flag = (name, fallback) => {
   return at >= 0 && args[at + 1] !== undefined ? args[at + 1] : fallback;
 };
 const verify = args.includes("--verify");
+const asJson = args.includes("--json");
 
-const packDir = resolve(
-  flag(
-    "pack",
-    /* The main repo's generator writes under public/mods/<modId>/, and the mod id is
-     * neo-linoleum. This default said `linoleum` for two commits after the rename -
-     * a sibling-checkout path that no test in either repository is in a position to
-     * see, so it only ever fails in someone's hands. */
-    join(
-      root,
-      "..",
-      "neo-angband",
-      "packages",
-      "web",
-      "public",
-      "mods",
-      "neo-linoleum",
-      "original-tiles",
-    ),
-  ),
-);
-const outFile = resolve(flag("out", join(root, "dist", "neo-linoleum.zip")));
-
-/**
- * Where the given pack must sit inside the zip: its own directory name, checked
- * against the manifest's declared paths.
- *
- * The check is the point. The runtime composes `mods/<id>/<declared path>/...`, so a
- * pack stored in the zip under any other name is invisible - a Graphics row that
- * silently draws nothing. Deriving the name from the directory and validating it
- * catches that, and unlike "the manifest must declare exactly one" it works whichever
- * of the six a build produced.
- */
-function packPathFor(dir) {
-  const manifest = JSON.parse(readFileSync(join(root, "manifest.json"), "utf8"));
-  const packs = Array.isArray(manifest.tilePacks) ? manifest.tilePacks : [];
-  const declared = packs
-    .map((p) => p?.path)
-    .filter((p) => typeof p === "string" && p !== "");
-  if (declared.length === 0) fail("manifest.json declares no tilePacks path");
-
-  /* MOD-relative by design (see the main repo's docs/LINOLEUM.md). A site path would
-   * resolve to mods/<id>/mods/<id>/... and 404 into ASCII. */
-  for (const path of declared) {
-    if (/^([a-z]+:)?[/\\]/iu.test(path) || path.split(/[/\\]/u).includes("..")) {
-      fail(`manifest.json tilePacks path "${path}" must be relative to the mod folder`);
-    }
-  }
-
-  const name = basename(dir);
-  if (!declared.includes(name)) {
-    fail(
-      `the pack at ${relative(root, dir) || dir} is named "${name}", which manifest.json\n` +
-        `        does not declare. Declared: ${declared.join(", ")}`,
-    );
-  }
-  return name;
-}
+const packsRoot = resolve(flag("packs", join(root, "packs")));
+const distRoot = resolve(flag("dist", join(root, "dist")));
 
 function fail(message) {
   console.error(`[pack] ${message}`);
   process.exit(1);
+}
+
+function note(message) {
+  if (!asJson) console.log(`[pack] ${message}`);
+}
+
+/**
+ * The tile pack directories the manifest declares, validated.
+ *
+ * MOD-relative by design (see the main repo's docs/LINOLEUM.md): the runtime
+ * composes `mods/<id>/<declared path>/...`, so a site path would resolve to
+ * mods/<id>/mods/<id>/... and 404 into ASCII, and a pack stored in a zip under any
+ * other name is a Graphics row that silently draws nothing.
+ */
+function declaredPacks() {
+  const manifest = JSON.parse(readFileSync(join(root, "manifest.json"), "utf8"));
+  const packs = Array.isArray(manifest.tilePacks) ? manifest.tilePacks : [];
+  const declared = packs.map((p) => p?.path).filter((p) => typeof p === "string" && p !== "");
+  if (declared.length === 0) fail("manifest.json declares no tilePacks path");
+  for (const path of declared) {
+    if (/^([a-z]+:)?[/\\]/iu.test(path) || path.split(/[/\\]/u).includes("..")) {
+      fail(`manifest.json tilePacks path "${path}" must be relative to the mod folder`);
+    }
+    if (path.includes("/") || path.includes("\\")) {
+      fail(`manifest.json tilePacks path "${path}" must be a single directory name`);
+    }
+  }
+  return declared;
 }
 
 /** Every file under `dir`, by path relative to it, sorted. */
@@ -226,51 +198,103 @@ function zip(entries) {
  * Build.
  * ------------------------------------------------------------------ */
 
-if (!existsSync(join(packDir, "manifest.txt"))) {
-  fail(
-    `no pack at ${relative(root, packDir) || packDir} - build it first:\n` +
-      `        pnpm --filter @neo-angband/web gen-linoleum-demo   (in the main repository)\n` +
-      `      or pass --pack <dir>`,
+/** One archive to produce: its name in dist/, and its sorted entries. */
+function plan() {
+  const jobs = [];
+
+  const rootEntries = [];
+  for (const name of ROOT_FILES) {
+    const full = join(root, name);
+    if (!existsSync(full)) fail(`${name} is missing from the repository root`);
+    rootEntries.push([name, readFileSync(full)]);
+  }
+  jobs.push({ file: MOD_ARCHIVE, entries: rootEntries });
+
+  const missing = [];
+  for (const key of declaredPacks()) {
+    const packDir = join(packsRoot, key);
+    if (!existsSync(join(packDir, "manifest.txt"))) {
+      missing.push(key);
+      continue;
+    }
+    const entries = walk(packDir).map((rel) => [
+      `${key}/${rel}`,
+      readFileSync(join(packDir, rel)),
+    ]);
+    jobs.push({ file: `neo-linoleum-${key}.zip`, entries });
+  }
+  /* EVERY declared pack, always. A declared pack with no archive is a Graphics row
+   * that falls back to ASCII - the exact failure this mod exists to avoid - and it
+   * would pass a check that only looked at the packs it happened to find. */
+  if (missing.length > 0) {
+    fail(
+      `no built pack for: ${missing.join(", ")}\n` +
+        `        Build them first:  node tools/build-packs.mjs\n` +
+        `        (needs a built Neo Angband checkout at ../neo-angband)`,
+    );
+  }
+
+  for (const job of jobs) {
+    job.entries.sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
+  }
+  return jobs;
+}
+
+const results = [];
+let stale = 0;
+
+for (const job of plan()) {
+  const bytes = zip(job.entries);
+  const digest = createHash("sha256").update(bytes).digest("hex");
+  const outFile = join(distRoot, job.file);
+  results.push({ path: `dist/${job.file}`, sha256: digest, bytes: bytes.length });
+
+  if (verify) {
+    if (!existsSync(outFile)) {
+      console.error(`[pack] ${relative(root, outFile)} has not been built`);
+      stale++;
+      continue;
+    }
+    const committed = createHash("sha256").update(readFileSync(outFile)).digest("hex");
+    if (committed !== digest) {
+      console.error(
+        `[pack] ${relative(root, outFile)} is stale.\n` +
+          `        committed: ${committed}\n` +
+          `        rebuilt:   ${digest}`,
+      );
+      stale++;
+      continue;
+    }
+    note(`up to date: dist/${job.file} (${digest})`);
+    continue;
+  }
+
+  mkdirSync(dirname(outFile), { recursive: true });
+  writeFileSync(outFile, bytes);
+  note(
+    `wrote dist/${job.file} - ${job.entries.length} files, ` +
+      `${(bytes.length / 1024 / 1024).toFixed(2)} MiB, ${digest}`,
   );
 }
 
-const packPath = packPathFor(packDir);
-
-const entries = [];
-for (const name of ROOT_FILES) {
-  const full = join(root, name);
-  if (!existsSync(full)) fail(`${name} is missing from the repository root`);
-  entries.push([name, readFileSync(full)]);
-}
-for (const rel of walk(packDir)) {
-  entries.push([`${packPath}/${rel}`, readFileSync(join(packDir, rel))]);
-}
-/* Sorted so the archive's byte order does not depend on the filesystem's. */
-entries.sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
-
-const bytes = zip(entries);
-const digest = createHash("sha256").update(bytes).digest("hex");
-
-if (verify) {
-  if (!existsSync(outFile)) fail(`${relative(root, outFile)} has not been built`);
-  const committed = readFileSync(outFile);
-  const committedDigest = createHash("sha256").update(committed).digest("hex");
-  if (committedDigest !== digest) {
-    fail(
-      `${relative(root, outFile)} is stale.\n` +
-        `        committed: ${committedDigest}\n` +
-        `        rebuilt:   ${digest}\n` +
-        `      Run: node tools/pack.mjs`,
-    );
-  }
-  console.log(`[pack] up to date: ${relative(root, outFile)} (${digest})`);
-  process.exit(0);
+if (verify && stale > 0) {
+  fail(`${stale} archive(s) stale or missing. Run: node tools/pack.mjs`);
 }
 
-mkdirSync(dirname(outFile), { recursive: true });
-writeFileSync(outFile, bytes);
-console.log(
-  `[pack] wrote ${relative(root, outFile)} - ${entries.length} files, ` +
-    `${(bytes.length / 1024 / 1024).toFixed(2)} MB`,
-);
-console.log(`[pack] sha256 ${digest}`);
+const total = results.reduce((n, r) => n + r.bytes, 0);
+note(`${results.length} archive(s), ${(total / 1024 / 1024).toFixed(1)} MiB total`);
+
+if (asJson) {
+  /* The shape RECOMMENDED_MODS wants, so wiring the catalogue is a copy rather
+   * than a transcription of 7 digests by hand. */
+  console.log(
+    JSON.stringify(
+      {
+        approxBytes: total,
+        archives: results.map(({ path, sha256 }) => ({ path, sha256 })),
+      },
+      null,
+      2,
+    ),
+  );
+}

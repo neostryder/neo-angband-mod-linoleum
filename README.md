@@ -117,41 +117,61 @@ terms are spelled out.
 
 ## Installing
 
-`dist/neo-linoleum.zip` is the installable form of this mod: the `original-tiles` demo
-pack (1505 files, of which 1499 are tile PNGs) plus the manifest, this README, the
-licence and [CREDITS.md](CREDITS.md). It is what the game's installer downloads, and it
-is checked against a digest the game ships with before a single byte is unzipped.
+**All six packs ship here, pre-converted.** `dist/` holds seven archives — one per tile
+pack, plus a small one for the manifest, this README, the licence and
+[CREDITS.md](CREDITS.md):
 
-That is one of the six packs the manifest declares. The other five are a player's own
-build — a 64x64 pack is 15 MB of generated PNGs — and a declared pack that is not
-present is not a broken row: the engine finds no `manifest.txt` and that row falls back
-to ASCII, exactly as a missing tilesheet does.
+| Archive | Files | Size |
+| --- | --- | --- |
+| `neo-linoleum-mod.zip` | 4 | 8 KiB |
+| `neo-linoleum-original-tiles.zip` | 1505 | 0.5 MiB |
+| `neo-linoleum-adam-bolt.zip` | 1503 | 0.9 MiB |
+| `neo-linoleum-gervais.zip` | 1501 | 1.5 MiB |
+| `neo-linoleum-nomad.zip` | 1471 | 0.5 MiB |
+| `neo-linoleum-shockbolt-dark.zip` | 1590 | 10.6 MiB |
+| `neo-linoleum-shockbolt-light.zip` | 1590 | 10.6 MiB |
 
-You can also just use the folder: clone this repository into your mods directory (or
-point the browser build at it with **Load mod folder**) and run
-`node tools/pack.mjs --pack <a built pack>` if you want to rebuild the archive.
+That is 9161 files and 42 MiB of loose art, 24.6 MiB as zip. The game's installer
+fetches each one and checks it against a digest built into the game *before* a single
+byte is unzipped, and unpacks them into the mod's own folder — which is where the game
+reads a tile pack from. Nothing about these packs lives in the game's repository.
+
+You can also just use the folder: clone this repository into your mods directory, or
+point the browser build at it with **Load mod folder**. The archives are ordinary zips,
+so unzip the packs you want beside `manifest.json` — or rebuild them from source art
+with `node tools/build-packs.mjs` (needs a built Neo Angband checkout at
+`../neo-angband`) followed by `node tools/pack.mjs`.
 
 <details>
-<summary>Why an archive rather than 1505 committed files</summary>
+<summary>Why seven archives rather than 9161 committed files, or one big zip</summary>
 
-The demo pack is one PNG per tile — 1499 of them. An `archive` payload is one HTTP
-request and one digest; the alternative is one request per file, so a 1505-request
-install is not a real option. The archive holds the *whole* mod because an installed mod's file list is
-whatever the archive contained, and the game's shared validator wants a top-level
-`manifest.json` from every source alike. That duplicates four text files, so
-`tools/pack.mjs --verify` fails if the committed archive has drifted from the working
-tree, and CI runs it on every push.
+A loose pack is one PNG per tile. An `archive` payload is one HTTP request and one
+digest; the alternative — a `files` payload — is one request per file, and 9161
+requests is not an install.
 
-The zip is written deterministically — entries sorted, timestamps fixed, stdlib
-`zlib` only — so its digest is a function of its content and rebuilding it anywhere
-gives the same bytes.
+Not one archive either. Measured, the whole thing is 24.6 MiB of zip: as a single blob
+that is rewritten in full whenever one tile changes, and it carries one digest whose
+failure says only "something in here is wrong". Per pack, a digest names which pack
+failed and a fix rewrites one file.
+
+The mod's four root files get their own archive because an installed mod's file list is
+whatever its archives contained, and the game's shared validator wants a top-level
+`manifest.json` from every source alike — so they have to be inside *something*, and
+inside all seven they would collide (the installer rejects a path that arrives from two
+archives rather than silently keeping the last one). `tools/pack.mjs --verify` fails if
+any committed archive has drifted from a fresh conversion, and CI runs it on every push.
+
+The zips are written deterministically — entries sorted, timestamps fixed, stdlib
+`zlib` only — so a digest is a function of content and rebuilding anywhere gives the
+same bytes. Verified: two builds into different directories produced seven identical
+files.
 
 </details>
 
 ## Status
 
 **0.9.0 — complete and working, held one notch below 1.0 on purpose.** The engine, the
-format, the converter and the demo pack are all built and in use, and the chain has
+format, the converter and all six packs are built and in use, and the chain has
 been measured end to end rather than assumed: the converter's 1499 output PNGs are each
 pixel-identical to the cell of the source tilesheet that Angband's own `graf-*.prf`
 says they came from; enabling this mod adds its six Graphics rows and disabling it
