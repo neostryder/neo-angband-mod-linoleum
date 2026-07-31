@@ -45,7 +45,10 @@ jobs:
           pnpm install --frozen-lockfile
           pnpm build
           pnpm --filter @neo-angband/web gen-linoleum-demo
-          test -f packages/web/public/mods/linoleum/original-tiles/manifest.txt
+          # The generator writes under public/mods/<modId>, and the mod id is
+          # neo-linoleum. This said `linoleum` and so the guard - whose whole job is to
+          # make a failed pack build FAIL rather than skip - was itself what failed.
+          test -f packages/web/public/mods/neo-linoleum/original-tiles/manifest.txt
 
       - name: Verify the committed archive is current
         working-directory: mod
