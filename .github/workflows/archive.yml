@@ -1,16 +1,18 @@
-# The committed archive must match the working tree.
+# The committed archives must match a fresh conversion of the source art.
 #
-# dist/neo-linoleum.zip carries its own copies of manifest.json, README.md and
-# LICENSE.md, because an installed mod's file list is whatever the archive contained
-# and the game's validator wants a top-level manifest.json from every source alike.
-# Duplication drifts, so this is the check that catches it: editing manifest.json
-# without rebuilding is a stale archive, and a player's installed mod would behave
-# like last week's with nothing to say so.
+# dist/ holds seven zips: one per tile pack, plus neo-linoleum-mod.zip carrying
+# manifest.json, README.md, LICENSE.md and CREDITS.md. Those four are duplicated
+# from the repository root, because an installed mod's file list is whatever its
+# archives contained and the game's validator wants a top-level manifest.json from
+# every source alike. Duplication drifts, so this is the check that catches it:
+# editing manifest.json without rebuilding is a stale archive, and a player's
+# installed mod would behave like last week's with nothing to say so.
 #
-# The demo pack is generated from the main repository's own art, so this checks out
-# both and builds it first. If that step ever fails, the archive check is SKIPPED
-# rather than passed - a green tick for a check that did not run is worse than a red
-# one.
+# The packs are converted from the main repository's tilesheets - upstream's own
+# art, which is core game data there - so this checks out both and builds them
+# first. tools/build-packs.mjs FAILS on missing source art rather than skipping,
+# and tools/pack.mjs FAILS if any declared pack has no built directory, so a
+# conversion that did not happen cannot reach the verify step as a green tick.
 name: archive
 
 on:
@@ -37,19 +39,20 @@ jobs:
         with:
           node-version: 22
 
-      - name: Build the demo pack
-        id: pack
+      - name: Build the converter
         working-directory: neo-angband
+        env:
+          ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
         run: |
           corepack enable
           pnpm install --frozen-lockfile
           pnpm build
-          pnpm --filter @neo-angband/web gen-linoleum-demo
-          # The generator writes under public/mods/<modId>, and the mod id is
-          # neo-linoleum. This said `linoleum` and so the guard - whose whole job is to
-          # make a failed pack build FAIL rather than skip - was itself what failed.
-          test -f packages/web/public/mods/neo-linoleum/original-tiles/manifest.txt
+          test -f packages/linoleum/dist/index.js
 
-      - name: Verify the committed archive is current
+      - name: Convert all six packs
+        working-directory: mod
+        run: node tools/build-packs.mjs --game ../neo-angband
+
+      - name: Verify the committed archives are current
         working-directory: mod
         run: node tools/pack.mjs --verify
