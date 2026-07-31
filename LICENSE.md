@@ -24,9 +24,13 @@ build with the converter carries whatever license the source art carried, and
 converting art does not change who owns it or what you may do with it.
 
 Some tile sets used with Angband are considerably more restrictive than the license
-above. The Shockbolt set, for one, permits no modification, no use outside Angband, and
-no commercial use without a purchased license — and a conversion to the loose-pack
-format is a modification. Sets like that may not be redistributed here or anywhere
-else without the artist's explicit permission.
+above. Angband's own license for the Shockbolt set permits no modification, no use
+outside Angband, and no commercial use without a purchased license — and a conversion
+to the loose-pack format is a modification. Sets like that may not be redistributed
+here or anywhere else without the artist's explicit permission. Neo Angband has that
+permission for the Shockbolt set, granted to that project specifically and conditional
+on it remaining non-commercial; it is not a permission this repository holds or can
+pass on.
 
-If you publish a pack, state the art's license in it.
+If you publish a pack, state the art's license in it. [CREDITS.md](CREDITS.md) is this
+mod's attribution and states the per-set terms.

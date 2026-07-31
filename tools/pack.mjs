@@ -11,11 +11,21 @@
  *
  * WHY THE ARCHIVE HOLDS THE WHOLE MOD. An installed mod's file list IS what the
  * archive contained, and the shared validator (readModDir) requires a top-level
- * manifest.json like every other source. So manifest.json / README.md / LICENSE.md
- * travel inside the zip beside the pack directory. That duplicates them, and
- * duplication drifts - which is what `--verify` is for, and why CI runs it: editing
- * manifest.json without rebuilding is caught here rather than by a player whose
- * installed mod behaves like last week's.
+ * manifest.json like every other source. So manifest.json / README.md / LICENSE.md /
+ * CREDITS.md travel inside the zip beside the pack directory. That duplicates them,
+ * and duplication drifts - which is what `--verify` is for, and why CI runs it:
+ * editing manifest.json without rebuilding is caught here rather than by a player
+ * whose installed mod behaves like last week's.
+ *
+ * ONE PACK, SIX DECLARED. The manifest declares all six tile sets Angband ships
+ * (grafID 101-106); the archive carries ONE of them, the cheap 8x8 demo, because a
+ * 64x64 pack is 15 MB of generated PNGs and the other five are a player's own build.
+ * A declared pack that is not present is not a broken row - the engine finds no
+ * manifest.txt and that row falls back to ASCII, exactly as a missing tilesheet does.
+ * So this script takes the pack it is given and checks its NAME against the declared
+ * paths, rather than requiring the manifest to declare exactly what the zip holds.
+ * It used to require exactly one, which is what made it exit 1 - and the `archive`
+ * workflow red - from the commit that declared all six onward.
  *
  * DETERMINISTIC. Entries sorted, timestamps fixed, stdlib zlib only. The digest is a
  * function of the CONTENT, so rebuilding on another machine produces the same bytes
@@ -39,13 +49,13 @@ import {
   statSync,
   writeFileSync,
 } from "node:fs";
-import { dirname, join, relative, resolve } from "node:path";
+import { basename, dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 /** Files from the repository root that travel inside the archive. */
-const ROOT_FILES = ["manifest.json", "README.md", "LICENSE.md"];
+const ROOT_FILES = ["manifest.json", "README.md", "LICENSE.md", "CREDITS.md"];
 
 const args = process.argv.slice(2);
 const flag = (name, fallback) => {
@@ -57,27 +67,59 @@ const verify = args.includes("--verify");
 const packDir = resolve(
   flag(
     "pack",
-    join(root, "..", "neo-angband", "packages", "web", "public", "mods", "linoleum", "original-tiles"),
+    /* The main repo's generator writes under public/mods/<modId>/, and the mod id is
+     * neo-linoleum. This default said `linoleum` for two commits after the rename -
+     * a sibling-checkout path that no test in either repository is in a position to
+     * see, so it only ever fails in someone's hands. */
+    join(
+      root,
+      "..",
+      "neo-angband",
+      "packages",
+      "web",
+      "public",
+      "mods",
+      "neo-linoleum",
+      "original-tiles",
+    ),
   ),
 );
 const outFile = resolve(flag("out", join(root, "dist", "neo-linoleum.zip")));
 
-/** The pack directory the manifest declares, which is where it must sit in the zip. */
-function declaredPackPath() {
+/**
+ * Where the given pack must sit inside the zip: its own directory name, checked
+ * against the manifest's declared paths.
+ *
+ * The check is the point. The runtime composes `mods/<id>/<declared path>/...`, so a
+ * pack stored in the zip under any other name is invisible - a Graphics row that
+ * silently draws nothing. Deriving the name from the directory and validating it
+ * catches that, and unlike "the manifest must declare exactly one" it works whichever
+ * of the six a build produced.
+ */
+function packPathFor(dir) {
   const manifest = JSON.parse(readFileSync(join(root, "manifest.json"), "utf8"));
   const packs = Array.isArray(manifest.tilePacks) ? manifest.tilePacks : [];
-  const paths = packs.map((p) => p?.path).filter((p) => typeof p === "string" && p !== "");
-  if (paths.length !== 1) {
+  const declared = packs
+    .map((p) => p?.path)
+    .filter((p) => typeof p === "string" && p !== "");
+  if (declared.length === 0) fail("manifest.json declares no tilePacks path");
+
+  /* MOD-relative by design (see the main repo's docs/LINOLEUM.md). A site path would
+   * resolve to mods/<id>/mods/<id>/... and 404 into ASCII. */
+  for (const path of declared) {
+    if (/^([a-z]+:)?[/\\]/iu.test(path) || path.split(/[/\\]/u).includes("..")) {
+      fail(`manifest.json tilePacks path "${path}" must be relative to the mod folder`);
+    }
+  }
+
+  const name = basename(dir);
+  if (!declared.includes(name)) {
     fail(
-      `manifest.json declares ${paths.length} tilePacks paths; this script packs exactly one`,
+      `the pack at ${relative(root, dir) || dir} is named "${name}", which manifest.json\n` +
+        `        does not declare. Declared: ${declared.join(", ")}`,
     );
   }
-  /* The path is MOD-relative by design (see the main repo's docs/LINOLEUM.md). A
-   * site path here would resolve to mods/<id>/mods/<id>/... and 404 into ASCII. */
-  if (/^([a-z]+:)?[/\\]/iu.test(paths[0]) || paths[0].split(/[/\\]/u).includes("..")) {
-    fail(`manifest.json tilePacks path "${paths[0]}" must be relative to the mod folder`);
-  }
-  return paths[0];
+  return name;
 }
 
 function fail(message) {
@@ -184,8 +226,6 @@ function zip(entries) {
  * Build.
  * ------------------------------------------------------------------ */
 
-const packPath = declaredPackPath();
-
 if (!existsSync(join(packDir, "manifest.txt"))) {
   fail(
     `no pack at ${relative(root, packDir) || packDir} - build it first:\n` +
@@ -193,6 +233,8 @@ if (!existsSync(join(packDir, "manifest.txt"))) {
       `      or pass --pack <dir>`,
   );
 }
+
+const packPath = packPathFor(packDir);
 
 const entries = [];
 for (const name of ROOT_FILES) {
