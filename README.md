@@ -170,7 +170,7 @@ files.
 
 ## Status
 
-**0.9.0 — complete and working, held one notch below 1.0 on purpose.** The engine, the
+**0.9.1 — complete and working, held one notch below 1.0 on purpose.** The engine, the
 format, the converter and all six packs are built and in use, and the chain has
 been measured end to end rather than assumed: the converter's 1499 output PNGs are each
 pixel-identical to the cell of the source tilesheet that Angband's own `graf-*.prf`
