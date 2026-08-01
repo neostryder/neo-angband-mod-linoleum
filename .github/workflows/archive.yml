@@ -13,6 +13,20 @@
 # first. tools/build-packs.mjs FAILS on missing source art rather than skipping,
 # and tools/pack.mjs FAILS if any declared pack has no built directory, so a
 # conversion that did not happen cannot reach the verify step as a green tick.
+#
+# THE GAME IS CHECKED OUT AT ITS DEFAULT BRANCH, UNPINNED, and that is deliberate
+# even though it makes this job depend on a repository nobody here controls. The
+# archives are a function of the converter, so pinning the converter would make
+# "current" mean "current as of whenever this was pinned" - and the one time these
+# archives went stale (2026-07-31, when the engine's packages were renamed to
+# @rpgm-tools/* and the stamp the converter writes changed with them) it was
+# exactly this unpinned checkout that noticed. A local run agreed with a cached
+# conversion and said nothing.
+#
+# The cost is real and worth naming: a push to the GAME can turn this repository
+# red on a day nothing here changed. So the job records which commit of the game
+# it built against, because "the archives no longer match" is useless without
+# "match what".
 name: archive
 
 on:
@@ -38,6 +52,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+
+      - name: Say which game commit these archives are being checked against
+        working-directory: neo-angband
+        run: |
+          echo "neo-angband $(git rev-parse HEAD) ($(git log -1 --format=%s))" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Build the converter
         working-directory: neo-angband
