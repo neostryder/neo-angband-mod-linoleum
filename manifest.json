@@ -1,10 +1,10 @@
 {
   "id": "neo-linoleum",
   "name": "neo-linoleum",
-  "version": "0.12.1",
+  "version": "0.13.0",
   "shape": "tiles",
   "engine": ">=0.9.0",
-  "author": "neostryder (RPGM Tools)",
+  "author": "neostryder",
   "license": "GPL-2.0-only",
   "description": "An alternative tile engine, and a much easier way to build a tile set: a folder of individual PNGs named after what they draw, instead of one sheet plus a table of pixel coordinates.\n\nEnabling it adds six rows to the Graphics screen - Angband's own tile sets, converted - so you can compare both engines on the same art. The game's own graphics are core content and are untouched if you turn this off.\n\nIt can also do what a fixed sheet cannot: one symbol drawing from a pool of variants, picked by map position so a seed still replays identically. Build your own pack with the converter in the main repository, or by hand - the format is plain text plus PNGs (docs/LINOLEUM.md).\n\nConverting somebody's tile set modifies their art. The Shockbolt packs ship under permission granted to Neo Angband specifically, conditional on this project not profiting, so check a set's licence before sharing a pack you built from it.",
   "dependencies": {
@@ -58,5 +58,6 @@
       "menuname": "Shockbolt Light (neo-linoleum)",
       "path": "shockbolt-light"
     }
-  ]
+  ],
+  "repository": "https://github.com/neostryder/neo-angband-mod-linoleum"
 }
