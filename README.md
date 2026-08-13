@@ -29,6 +29,7 @@ my-pack/
     targets.txt             feat / trap / monster / object / flavour, by name
     families.txt            shared effect metadata (only when authored)
     pools.txt               variant pools (only when authored)
+    tall.txt                double-height tiles (only when the set has any)
   images/8/                 one PNG per tile, named for what it draws
     feat_granite_lit_0.png
     monster_cave_orc_0.png
@@ -53,6 +54,11 @@ It also does two things a fixed sheet cannot:
   of always the same one. Which tile a given square gets is chosen by map position, so
   it is identical on every replay of a seed — variety without breaking determinism.
 - **Families.** Shared effect metadata across a group of tiles, declared once.
+- **Double-height tiles, declared by name.** A tile listed in `maps/tall.txt` is two
+  cells tall and is drawn over the cell above the one it stands in — how Shockbolt
+  draws its larger monsters. A conventional sheet can only do this by reserving a
+  band of rows in the image and telling the game which rows those are; here any tile
+  can be tall, in a set with no sheet behind it at all.
 
 ## Building a pack
 
