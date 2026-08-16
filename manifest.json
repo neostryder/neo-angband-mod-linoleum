@@ -1,7 +1,7 @@
 {
   "id": "neo-linoleum",
   "name": "neo-linoleum",
-  "version": "0.14.0",
+  "version": "0.14.1",
   "shape": "tiles",
   "engine": ">=0.9.0",
   "author": "neostryder",
