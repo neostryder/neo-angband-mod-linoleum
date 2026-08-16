@@ -68,6 +68,15 @@ jobs:
           pnpm build
           test -f packages/linoleum/dist/index.js
 
+      # The root build (tsc -b) never generates packages/web/public/tiles - it is
+      # gitignored and produced only by packages/web's own build/bundle/dev
+      # (packages/web/scripts/sync-tiles.mjs). build-packs.mjs reads original
+      # source art from that tree, so a fresh checkout of neo-angband here needs
+      # this step explicitly or the converter fails with "source art missing".
+      - name: Generate neo-angband's served tile art
+        working-directory: neo-angband
+        run: pnpm --dir packages/web run sync-tiles
+
       - name: Convert all six packs
         working-directory: mod
         run: node tools/build-packs.mjs --game ../neo-angband
