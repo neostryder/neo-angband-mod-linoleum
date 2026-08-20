@@ -167,6 +167,13 @@ inside all seven they would collide (the installer rejects a path that arrives f
 archives rather than silently keeping the last one). `tools/pack.mjs --verify` fails if
 any committed archive has drifted from a fresh conversion, and CI runs it on every push.
 
+That last point has a consequence worth stating plainly, because it does not look like
+one: **this README is shipped content.** `manifest.json`, `README.md`, `LICENSE.md` and
+`CREDITS.md` are the four files inside `neo-linoleum-mod.zip`, so editing any of them —
+even a typo fix, even a link — changes that archive's digest and makes the committed
+copy stale. Re-run `node tools/pack.mjs` in the same commit. A documentation-only change
+here is still a build.
+
 The zips are written deterministically — entries sorted, timestamps fixed, stdlib
 `zlib` only — so a digest is a function of content and rebuilding anywhere gives the
 same bytes. Verified: two builds into different directories produced seven identical
@@ -176,7 +183,7 @@ files.
 
 ## Status
 
-**0.9.1 — complete and working, held one notch below 1.0 on purpose.** The engine, the
+**0.14.3 — complete and working, held below 1.0 on purpose.** The engine, the
 format, the converter and all six packs are built and in use, and the chain has
 been measured end to end rather than assumed: the converter's 1499 output PNGs are each
 pixel-identical to the cell of the source tilesheet that Angband's own `graf-*.prf`
