@@ -7,3 +7,4 @@
 # by hope. `node tools/pack.mjs --verify` is what proves the archives match a
 # fresh conversion, and CI runs it on every push.
 packs/
+.claude/
