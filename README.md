@@ -302,6 +302,17 @@ against a fresh build, which is what catches a manifest or a plugin edited witho
 the archive being rebuilt - an installed mod's files are whatever its archives held,
 so a stale archive is a player running last week's code with nothing to say so.
 
+One of those tests, `joint.node.test.mjs`, drives this mod's real `plugin.js`
+through the GAME's real fill door over real tile art, which is the only place both
+halves of the seam exist at once. It needs a built checkout of
+[neo-angband](https://github.com/neostryder/neo-angband) beside this one (`../neo-angband`,
+the same layout CI uses) and **fails** without it rather than skipping quietly. If
+you have only this repository:
+
+```sh
+JOINT_OPTIONAL=1 npm test
+```
+
 ## Questions, or something wrong
 
 [**The RPGM Tools Discord**](https://discord.gg/YegtwbHTBQ) is the fastest way

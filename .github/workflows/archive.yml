@@ -82,9 +82,14 @@ jobs:
         run: node tools/build-packs.mjs --game ../neo-angband
 
       # BEFORE the archive check, because a broken plugin is a worse failure than a
-      # stale zip and should be the one named first. The plugin has no dependency on
-      # the game's packages - the door it writes through is passed in - so this
-      # needs nothing from the checkout above.
+      # stale zip and should be the one named first.
+      #
+      # AFTER the game checkout and its build, though, and that ordering is load
+      # bearing: joint.node.test.mjs drives this mod's real plugin.js through the
+      # GAME's real fill door (packages/web/src/tile-registry.ts) over the real
+      # generated tile art, which is the one place both halves of the seam exist at
+      # once. It FAILS rather than skips when the checkout is missing, so this job
+      # is where that test actually runs.
       - name: Test the plugin
         working-directory: mod
         run: |
