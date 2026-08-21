@@ -73,7 +73,7 @@ const linoleum = await import(pathToFileURL(converterEntry).href);
  * Why a built pack cannot be reused, or null when it can.
  *
  * Compares the stamp the converter writes into `maps/targets.txt` with the stamp the
- * converter we just loaded writes now. A converter too old to export GENERATED_BY
+ * converter just loaded writes now. A converter too old to export GENERATED_BY
  * cannot answer the question, so its packs are rebuilt rather than trusted - the
  * whole point here is not to trust bytes whose provenance is unknown.
  */

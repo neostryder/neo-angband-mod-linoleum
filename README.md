@@ -91,8 +91,8 @@ coordinate, and it is not the base game's ant either.
 **Under Angband's own tile sheets, it stays a letter**, and that is deliberate
 rather than a gap. Those sheets are one image cut into a fixed grid: every cell is
 somebody's tile and there is no spare cell to put a variant in, so the best that
-could be done there is an exact duplicate of another creature - and it is not our
-art to make that call about.
+could be done there is an exact duplicate of another creature, and that is not a
+call this mod's art gets to make.
 
 What that means in practice:
 
@@ -173,7 +173,7 @@ See
 [docs/LINOLEUM.md](https://github.com/neostryder/neo-angband/blob/master/docs/LINOLEUM.md)
 in the main repository for the format in full.
 
-**Packs you build are yours, and the art in them is not ours to license.** If you
+**Packs you build are yours, and the art in them is not mine to license.** If you
 convert a tileset the result carries whatever licence the original art carried:
 converting does not change who owns it, and **a conversion is a modification**: it
 cuts one sheet into hundreds of separate images, so a licence that permits
