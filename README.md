@@ -60,31 +60,39 @@ It also does two things a fixed sheet cannot:
   band of rows in the image and telling the game which rows those are; here any tile
   can be tall, in a set with no sheet behind it at all.
 - **A tile for a creature the pack has never heard of.** A mod's own monsters and
-  items get a picture here even though no pack was built with them in mind, and a
-  picture of their own rather than a duplicate. See below.
+  items get a picture under these packs even though no pack was built with them in
+  mind, and a picture of their own rather than a duplicate of a relative's. This
+  mod supplies that; the game does not. See below.
 
 ## Tiles for modded content
 
-**Needs Neo Angband 0.23.0 or newer for the second half of this.** The family tile
-described below arrived in 0.22.0 and works today; the recolour that makes it
-distinctive is in the game release after that. On an older game these packs work
-exactly as they always did, and a modded creature borrows its family's tile without
-the recolour, so nothing here breaks on an older engine - it is simply less useful.
-The mod's own `engine` range stays open for that reason.
+**This mod needs Neo Angband 0.23.0 or newer, and 0.15.0 is where that changed.**
+Everything below used to be the game's own behaviour. It is this mod's now, which
+is why the whole mod asks for a newer game than it used to: the code that draws a
+modded creature is here, and the door it writes through arrived in 0.23.0. If your
+game is older, keep neo-linoleum 0.14.4 - the tile sets themselves are unchanged
+between the two.
 
-No tile set was built knowing about somebody's mod, so a modded creature used to be
-a coloured letter standing in a tiled dungeon. The game fixes half of that for every
-tile set: an added monster takes the tile of another creature sharing its family, and
-an added item takes one from another item of its type, so a modded ant is an ant
-everywhere at once without the mod's author naming a single pixel coordinate.
+Why it moved: Neo Angband is a faithful port of Angband 4.2.6, and 4.2.6 has no
+concept of a record a mod added, so it has no opinion about what one should look
+like. "Take the picture of your nearest relative" is a judgement somebody made,
+and the port does not get to make judgements. It is also a judgement about
+somebody else's art - a tile set drawn in 2003 has no picture for content added
+twenty years later, and a sibling's picture there is a confident lie where a letter
+was the honest answer. A tile set deciding for its own art is on firmer ground, so
+that is where the rule lives now.
 
-That leaves the other half, and this is where a loose pack can do something a sheet
-cannot. Taking the family's tile means the added ant is **exactly** the base game's
-ant, and nobody can tell which is which: not the player who meets both, and not the
-author checking their own work. A conventional tileset is stuck there, because its
-tiles are cells of a fixed grid and there is no spare cell to put a variant in. A
-loose pack's tiles are separate images, so the engine makes a new one: the family's
-picture with its colour turned.
+**Under this mod's packs**, a creature or item a mod added, with no tile of its own,
+is drawn from its nearest relative with the colour turned: an added monster from a
+creature sharing its family, an added item from another item of its type. So a
+modded ant is a recognisable ant without its author naming a single pixel
+coordinate, and it is not the base game's ant either.
+
+**Under Angband's own tile sheets, it stays a letter**, and that is deliberate
+rather than a gap. Those sheets are one image cut into a fixed grid: every cell is
+somebody's tile and there is no spare cell to put a variant in, so the best that
+could be done there is an exact duplicate of another creature - and it is not our
+art to make that call about.
 
 What that means in practice:
 
@@ -96,9 +104,18 @@ What that means in practice:
   randomness, the clock or your save.
 - **Nothing you did not add is changed.** Only records a mod ADDED are given a tile
   this way, so an unmodded game draws exactly what it always drew, and a pack with
-  no mods installed produces none of these at all.
+  no mods installed produces none of these at all. The game enforces the other
+  half of that itself: this mod is handed a door that refuses any tile the pack or
+  a pref file already assigned, so it cannot repaint your tile set even by mistake.
 - **You can still choose the tile yourself.** Name an asset for your monster in a
   pref file and that wins outright.
+- **You can turn it off.** "Draw modded content from its kin", in this mod's
+  options, on by default. Off, modded content keeps its letter.
+
+**If you write mods: draw your own tiles.** This is a fallback for the mods that
+do not, not a substitute for drawing an orc. If you ship a mod with no art, say so
+in its description and point your players here, so a letter in their dungeon is
+something they were told about rather than something that looks broken.
 
 One honest limit: turning a colour does nothing to a grey tile. If the family's tile
 is stone, iron or bone, the derived one comes back the same colour it went in. The
@@ -230,7 +247,9 @@ files.
 
 ## Status
 
-**0.14.4: complete and working, held below 1.0 on purpose.** The engine, the
+**0.15.0: complete and working, held below 1.0 on purpose.** 0.15.0 is the first
+version to carry CODE - one `plugin.js` holding the kin rule the game handed over,
+with its own tests in this repository. The engine, the
 format, the converter and all six packs are built and in use, and the chain has
 been measured end to end rather than assumed: the converter's 1499 output PNGs are each
 pixel-identical to the cell of the source tilesheet that Angband's own `graf-*.prf`
@@ -270,6 +289,18 @@ git config core.hooksPath /path/to/neo-angband/.githooks
 That is the gate that sees a **new** file before it is committed. The `privacy`
 workflow is the later one, because it reads tracked files, so by the time it can see a new
 file the bytes are already published. Both, not either.
+
+Since 0.15.0 there is code here as well, so there is one command to run before
+pushing:
+
+```sh
+npm install && npm run verify
+```
+
+That runs the plugin's tests and then checks the committed archives under `dist/`
+against a fresh build, which is what catches a manifest or a plugin edited without
+the archive being rebuilt - an installed mod's files are whatever its archives held,
+so a stale archive is a player running last week's code with nothing to say so.
 
 ## Questions, or something wrong
 

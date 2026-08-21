@@ -8,3 +8,5 @@
 # fresh conversion, and CI runs it on every push.
 packs/
 .claude/
+node_modules/
+package-lock.json

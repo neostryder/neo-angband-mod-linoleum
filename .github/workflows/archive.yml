@@ -1,7 +1,7 @@
 # The committed archives must match a fresh conversion of the source art.
 #
 # dist/ holds seven zips: one per tile pack, plus neo-linoleum-mod.zip carrying
-# manifest.json, README.md, LICENSE.md and CREDITS.md. Those four are duplicated
+# manifest.json, plugin.js, README.md, LICENSE.md and CREDITS.md. Those five are duplicated
 # from the repository root, because an installed mod's file list is whatever its
 # archives contained and the game's validator wants a top-level manifest.json from
 # every source alike. Duplication drifts, so this is the check that catches it:
@@ -80,6 +80,16 @@ jobs:
       - name: Convert all six packs
         working-directory: mod
         run: node tools/build-packs.mjs --game ../neo-angband
+
+      # BEFORE the archive check, because a broken plugin is a worse failure than a
+      # stale zip and should be the one named first. The plugin has no dependency on
+      # the game's packages - the door it writes through is passed in - so this
+      # needs nothing from the checkout above.
+      - name: Test the plugin
+        working-directory: mod
+        run: |
+          npm install --no-audit --no-fund
+          npm test
 
       - name: Verify the committed archives are current
         working-directory: mod

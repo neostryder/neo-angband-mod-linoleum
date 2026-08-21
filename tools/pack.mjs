@@ -49,8 +49,16 @@ import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
-/** Files from the repository root that travel inside the mod archive. */
-const ROOT_FILES = ["manifest.json", "README.md", "LICENSE.md", "CREDITS.md"];
+/**
+ * Files from the repository root that travel inside the mod archive.
+ *
+ * `plugin.js` is here because an installed mod's code is loaded BY NAME from the
+ * mod folder, and the mod folder is whatever the archives unpacked. A plugin left
+ * out of the archive is a mod whose manifest declares code the game then cannot
+ * find, which reports as a mod fault with nothing in this repository able to have
+ * noticed - so it is listed beside the manifest that declares it.
+ */
+const ROOT_FILES = ["manifest.json", "plugin.js", "README.md", "LICENSE.md", "CREDITS.md"];
 
 /** The archive that carries ROOT_FILES, and nothing else. */
 const MOD_ARCHIVE = "neo-linoleum-mod.zip";
