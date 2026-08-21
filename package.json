@@ -1,0 +1,35 @@
+{
+  "name": "neo-angband-mod-linoleum",
+  "version": "0.15.0",
+  "private": true,
+  "description": "neo-linoleum: a loose-pack tile engine for Neo Angband, and tiles for content the pack has never heard of",
+  "license": "GPL-2.0-only",
+  "author": "neostryder (RPGM Tools)",
+  "homepage": "https://github.com/neostryder/neo-angband-mod-linoleum",
+  "type": "module",
+  "//private": [
+    "Not published to npm, and not intended to be. A mod is distributed as a FOLDER the",
+    "game fetches - manifest.json plus plugin.js plus its archives, at a tag, verified",
+    "against a digest that ships inside the game. npm is not in that path, and publishing",
+    "would create a second way to get this mod that nothing checks."
+  ],
+  "//why-this-file-exists": [
+    "It did not until 0.15.0, because this mod was pure data: converted art plus the",
+    "manifest that lists it, and tools/*.mjs run on a bare Node with no dependencies.",
+    "0.15.0 ships plugin.js - the kin rule that used to live in the game - and code with",
+    "no tests is how the same rule reached players in the first place. So: vitest, and",
+    "nothing else."
+  ],
+  "scripts": {
+    "test": "vitest run",
+    "packs": "node tools/build-packs.mjs",
+    "archives": "node tools/pack.mjs",
+    "verify": "npm run test && node tools/pack.mjs --verify"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.10"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
