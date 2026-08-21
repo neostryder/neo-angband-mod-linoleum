@@ -17,7 +17,7 @@
  * and a `derive` that recolours - and the tile set holds the policy. This file is
  * that policy, and it applies to LINOLEUM PACKS ONLY. Under Angband's own tile
  * sheets, content this mod knows nothing about stays a letter, which is the
- * honest answer for art that is not ours to guess at.
+ * honest answer for art that is not this mod's to guess at.
  *
  * WHAT AN AUTHOR SHOULD DO INSTEAD. Ship tiles with your content. This is a
  * fallback for the mods that do not, not a substitute for drawing an orc.
@@ -133,8 +133,8 @@ export default {
     if (ctx.flags && ctx.flags["linoleum.deriveTiles"] === false) return;
 
     host.tiles.register((fill) => {
-      /* NOT OUR ART TO GUESS AT. A linoleum pack is this mod's, converted or
-       * hand-authored, and a fill there is a decision we are entitled to make.
+      /* NOT THIS MOD'S ART TO GUESS AT. A linoleum pack is this mod's, converted or
+       * hand-authored, and a fill there is a decision this mod is entitled to make.
        * A tilesheet is Angband's own fixed atlas, where the honest answer for
        * content it predates is the letter the game would draw anyway. */
       if (fill.pack.engine !== "linoleum") return;

@@ -19,7 +19,7 @@
  *      there is a confident lie where a letter is an honest answer. The game no
  *      longer enforces this - it used to - so this file is the only thing that
  *      does.
- *   2. Linoleum packs only. Angband's own tile sheets are not ours to guess at.
+ *   2. Linoleum packs only. Angband's own tile sheets are not this mod's to guess at.
  *   3. Two added creatures on one donor get different colours.
  *   4. Deterministic: the same content produces the same colours every launch.
  */
@@ -266,7 +266,7 @@ describe("register", () => {
     expect(d.monsterTiles.has(1)).toBe(true);
   });
 
-  it("declines a pack that is not ours", () => {
+  it("declines a pack that is not its own", () => {
     /* The one place this mod says "not my art to guess at". Under Angband's own
      * tile sheets a modded creature keeps its letter, on purpose. */
     const h = host();
