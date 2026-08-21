@@ -27,6 +27,8 @@
     "verify": "npm run test && node tools/pack.mjs --verify"
   },
   "devDependencies": {
+    "@rpgm-tools/neo-angband-core": "^0.23.0",
+    "@rpgm-tools/neo-angband-mod-sdk": "^0.23.0",
     "vitest": "^4.1.10"
   },
   "engines": {
