@@ -193,7 +193,7 @@ pack, plus a small one for the manifest, this README, the licence and
 
 | Archive | Files | Size |
 | --- | --- | --- |
-| `neo-linoleum-mod.zip` | 4 | 8 KiB |
+| `neo-linoleum-mod.zip` | 5 | 15 KiB |
 | `neo-linoleum-original-tiles.zip` | 1505 | 0.5 MiB |
 | `neo-linoleum-adam-bolt.zip` | 1503 | 0.9 MiB |
 | `neo-linoleum-gervais.zip` | 1501 | 1.5 MiB |
@@ -202,9 +202,11 @@ pack, plus a small one for the manifest, this README, the licence and
 | `neo-linoleum-shockbolt-light.zip` | 1590 | 10.6 MiB |
 
 That is 9161 files and 42 MiB of loose art, 24.6 MiB as zip. The game's installer
-fetches each one and checks it against a digest built into the game *before* a single
-byte is unzipped, and unpacks them into the mod's own folder, which is where the game
-reads a tile pack from. Nothing about these packs lives in the game's repository.
+fetches each one from a pinned tag, records the SHA-256 of the bytes that arrived, and
+unpacks them into the mod's own folder, which is where the game reads a tile pack from.
+That digest is what later tells you whether an installed pack has changed since it was
+installed; what stops the download itself changing under you is the tag. Nothing about
+these packs lives in the game's repository.
 
 You can also just use the folder: clone this repository into your mods directory, or
 point the browser build at it with **Load mod folder**. The archives are ordinary zips,
@@ -224,7 +226,7 @@ that is rewritten in full whenever one tile changes, and it carries one digest w
 failure says only "something in here is wrong". Per pack, a digest names which pack
 failed and a fix rewrites one file.
 
-The mod's four root files get their own archive because an installed mod's file list is
+The mod's five root files get their own archive because an installed mod's file list is
 whatever its archives contained, and the game's shared validator wants a top-level
 `manifest.json` from every source alike, so they have to be inside *something*, and
 inside all seven they would collide (the installer rejects a path that arrives from two
@@ -232,11 +234,11 @@ archives rather than silently keeping the last one). `tools/pack.mjs --verify` f
 any committed archive has drifted from a fresh conversion, and CI runs it on every push.
 
 That last point has a consequence worth stating plainly, because it does not look like
-one: **this README is shipped content.** `manifest.json`, `README.md`, `LICENSE.md` and
-`CREDITS.md` are the four files inside `neo-linoleum-mod.zip`, so editing any of them
-(even a typo fix, even a link) changes that archive's digest and makes the committed
-copy stale. Re-run `node tools/pack.mjs` in the same commit. A documentation-only change
-here is still a build.
+one: **this README is shipped content.** `manifest.json`, `plugin.js`, `README.md`,
+`LICENSE.md` and `CREDITS.md` are the five files inside `neo-linoleum-mod.zip`, so
+editing any of them (even a typo fix, even a link) changes that archive's digest and
+makes the committed copy stale. Re-run `node tools/pack.mjs` in the same commit. A
+documentation-only change here is still a build.
 
 The zips are written deterministically, with entries sorted, timestamps fixed, stdlib
 `zlib` only, so a digest is a function of content and rebuilding anywhere gives the
@@ -247,7 +249,7 @@ files.
 
 ## Status
 
-**0.15.0: complete and working, held below 1.0 on purpose.** 0.15.0 is the first
+**0.15.1: complete and working, held below 1.0 on purpose.** 0.15.0 is the first
 version to carry CODE - one `plugin.js` holding the kin rule the game handed over,
 with its own tests in this repository. The engine, the
 format, the converter and all six packs are built and in use, and the chain has
