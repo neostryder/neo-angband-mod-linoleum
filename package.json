@@ -1,6 +1,6 @@
 {
   "name": "neo-angband-mod-linoleum",
-  "version": "0.15.1",
+  "version": "0.16.0",
   "private": true,
   "description": "neo-linoleum: a loose-pack tile engine for Neo Angband, and tiles for content the pack has never heard of",
   "license": "GPL-2.0-only",

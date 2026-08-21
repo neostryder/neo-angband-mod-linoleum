@@ -63,6 +63,10 @@ It also does two things a fixed sheet cannot:
   items get a picture under these packs even though no pack was built with them in
   mind, and a picture of their own rather than a duplicate of a relative's. This
   mod supplies that; the game does not. See below.
+- **A picture for a shapechanged character.** A Druid in bear form is drawn as a
+  bear rather than as the usual figure, mirrored and repainted in colours picked
+  from the character's class and race, with the creature getting more impressive as
+  the character levels. Off by default. See below.
 
 ## Tiles for modded content
 
@@ -123,6 +127,145 @@ alternative would be stamping a mark onto somebody else's art, which is a bigger
 than a similar colour, so the limit stays. Full detail is in
 [docs/LINOLEUM.md](https://github.com/neostryder/neo-angband/blob/master/docs/LINOLEUM.md)
 in the main repository.
+
+## A shapechanged character, drawn as the creature
+
+**Off by default.** "Draw a shapechanged character as the creature", in this mod's
+options.
+
+Angband 4.2.6 gives the Druid eight shapes, and the map draws none of them: a
+character in bear form is still the tile set's usual figure. That is upstream's
+own behaviour, and Neo Angband keeps it, because 4.2.6 has no per-shape player
+picture and inventing one in the game would be the port adding something. Under
+this mod's packs, with this switched on, a shapechange is drawn as the closest
+real creature for that form - **mirrored**, and **repainted from a palette picked
+from the character's class and race**.
+
+No new art. Every form already has a creature in the game with a tile in these
+packs; the two transforms are what stop it reading as "there is a wolf standing
+where I was". The mirror is the cheapest possible signal that this is not that
+creature: Angband's tiles all face one way, so a mirrored one is visibly the odd
+figure on the level. The repaint is a real palette replacement rather than a
+colour rotation - every pixel is indexed by brightness into a five-entry ramp and
+comes out in the ramp's colours, so it works on a grey wolf and puts the figure in
+the character's colours whatever the creature's were. The silhouette is the
+creature's exactly, to the pixel: this cannot change what shape the creature is,
+only what colours it is drawn in.
+
+### Which creature, at which level
+
+Higher level, more impressive version of the same family. Every name below is a
+real `monster.txt` entry, verified against Angband 4.2.6's own monster list and
+against these packs' target maps, because a name that is plausible and absent
+draws nothing and looks exactly like the switch being off.
+
+| Form | Level 1 | then | then | then | then |
+| --- | --- | --- | --- | --- | --- |
+| fox | wild dog | 25: blink dog | | | |
+| Pukel-man | pukelman | 18: Eog golem | 34: colossus | | |
+| bear | cave bear | 17: grizzly bear | 33: werebear | 50: Beorn, the Mountain Bear | |
+| eagle | blood falcon | 25: giant roc | 50: The Phoenix | | |
+| bat | fruit bat | 12: giant tan bat | 23: vampire bat | 34: bat of Gorgoroth | 45: doombat |
+| warg | warg | 17: wolf chieftain | 33: hellhound | 50: Huan, Wolfhound of the Valar | |
+| vampire | vampire | 12: master vampire | 23: vampire lord | 34: elder vampire | 50: Thuringwethil, the Vampire Messenger |
+| werewolf | werewolf | 17: werewolf of Sauron | 33: Draugluin, Sire of All Werewolves | 50: Carcharoth, the Jaws of Thirst | |
+
+A family whose most powerful real member is a **unique** reserves that picture for
+level 50, so it is what a finished character wears rather than a mid-game one; the
+bands below it are spread evenly. A family with no unique at the top spreads all
+its bands evenly. The numbers are authored rather than taken from each monster's
+own dungeon depth, because a monster's depth says where the game puts it, not how
+impressive it looks at 32 pixels.
+
+### Three short lists, and why they stay short
+
+**fox: two tiers.** There is no fox in Angband 4.2.6, and no vulpine monster base
+either - `monster_base.txt` offers `canine`, `feline`, `rodent` and
+`zephyr hound`. The shape is small, swift and stealthy, so the small end of the
+canine base is the honest match, and `blink dog` is where it stops: every canine
+above that is a wolf, and the wolves are what the warg and werewolf forms already
+draw. A third form borrowing them would make three shapes look like one. The
+zephyr hounds were considered and rejected - they are elemental constructs drawn
+as breath-weapon hounds, not small canines.
+
+**eagle: three tiers.** There is no eagle either. The bird base has exactly two
+non-unique birds of prey, `blood falcon` and `giant roc`, plus `The Phoenix`. The
+crows (`crow`, `crow of Durthang`, `craban`) are deliberately left out: an eagle
+drawn as a crow at low level would be a smaller bird rather than a weaker one,
+which is the wrong axis. `winged horror` shares the base and is not a raptor.
+
+**Pukel-man: three tiers.** `pukelman` is the shape's own creature, and above it
+the progression stays with stone, because the shape is stone - it grants ROCK,
+shard resistance and damage reduction. `Eog golem` and `colossus` are the stone
+ones. The deeper golems are mithril, iron and bronze, which are metal, and
+`drolem`, which is a dragon construct: each exists, and each would be a different
+creature wearing the same word.
+
+The other five families are four or five deep with nothing borrowed. Where a
+family has more real members than tiers, the extras are named in `plugin.js` with
+the reason they were left out.
+
+### The colours
+
+Six palettes by class, one highlight by race, five entries in total.
+
+| Palette | Classes | Reads as |
+| --- | --- | --- |
+| wild | Druid, Ranger | forest shadow through sunlit leaf |
+| holy | Priest, Paladin | warm gold and bone |
+| arcane | Mage | cool blue into violet |
+| dark | Necromancer, Blackguard | cold desaturated purple over near-black |
+| martial | Warrior | iron and steel |
+| shadow | Rogue | charcoal into muted teal |
+
+**A grouping rather than nine palettes**, because the palette has one job: say at
+a glance whose shape this is. Nine four-colour ramps would be nine a player
+cannot tell apart, and the classes that read alike do read alike - a Priest and a
+Paladin are the same kind of character in the same kind of armour. The Druid and
+the Ranger get the earthy one because they are the two classes at home outdoors
+and the Druid casts every one of these forms, so it is the palette most players
+will ever see.
+
+The **race** supplies the fifth and brightest entry: warm bone for Human, mint and
+near-white for the Elf lines, wheat for Hobbit, copper for Dwarf, olive and moss
+for the Orc and Troll halves, cyan for Gnome, silver for Dunadan, sulphur for
+Kobold. It is the brightest entry deliberately - that band is specular highlight,
+the smallest area in any tile, so the class is what reads at a glance and the race
+is the accent that separates two characters of the same class. Reversed, every Elf
+of every class would look like the same creature. Each highlight is pale rather
+than saturated, because a saturated one there reads as a rim light on the figure
+rather than as part of it.
+
+**Five bands in total is the number most likely to want changing**, and it is a
+judgement about tiles between 8 and 64 pixels wide with the 8-pixel end weighted:
+fewer reads flatter and more stylised, more preserves the creature's own shading.
+The engine takes up to sixteen.
+
+### Where it falls back, and to what
+
+Every one of these leaves the tile set's own player picture exactly as it is,
+which is what an unmodded game draws:
+
+- **The switch is off**, which is the default.
+- **Not shapechanged**, which is almost all of the time.
+- **The tile set is one of Angband's own sheets** rather than a linoleum pack. A
+  fixed sheet is one image cut into a grid with no spare cell to put a variant in,
+  so there is nothing to allocate.
+- **The game has no player-tile seam.** This needs a door the game grew after
+  0.24.0. On an older game the switch does nothing, everything else in this mod
+  works unchanged, and the log says so once.
+- **A class or race this mod has no palette for**, which means one a content mod
+  added. Guessing that a modded class is "martial" would put a colour on somebody
+  else's character with nothing behind the choice, so it declines instead.
+
+And one that falls back to a lower tier rather than to nothing: **a pack that does
+not draw that band's creature**. Measured, this is two monsters. `werewolf of
+Sauron` and `Beorn, the Mountain Bear` were added to Angband in 4.2.x and only
+ever added to Shockbolt's own pref file upstream, so under Original Tiles, Adam
+Bolt and Nomad neither has a tile, and under Gervais the bear has none. A level 17
+werewolf under those packs is a plain werewolf until level 33, and a level 50 bear
+is a werebear. The shipped packs are checked against this list on every push, so a
+band that quietly loses its art is a red build rather than a silent downgrade.
 
 ## Building a pack
 
@@ -193,15 +336,18 @@ pack, plus a small one for the manifest, this README, the licence and
 
 | Archive | Files | Size |
 | --- | --- | --- |
-| `neo-linoleum-mod.zip` | 5 | 15 KiB |
+| `neo-linoleum-mod.zip` | 5 | 27 KiB |
 | `neo-linoleum-original-tiles.zip` | 1505 | 0.5 MiB |
-| `neo-linoleum-adam-bolt.zip` | 1503 | 0.9 MiB |
-| `neo-linoleum-gervais.zip` | 1501 | 1.5 MiB |
-| `neo-linoleum-nomad.zip` | 1471 | 0.5 MiB |
+| `neo-linoleum-adam-bolt.zip` | 1495 | 0.9 MiB |
+| `neo-linoleum-gervais.zip` | 1500 | 1.5 MiB |
+| `neo-linoleum-nomad.zip` | 1469 | 0.5 MiB |
 | `neo-linoleum-shockbolt-dark.zip` | 1590 | 10.6 MiB |
 | `neo-linoleum-shockbolt-light.zip` | 1590 | 10.6 MiB |
 
-That is 9161 files and 42 MiB of loose art, 24.6 MiB as zip. The game's installer
+That is 9154 files, 9149 of them loose art at 42 MiB, 24.6 MiB as zip. Three of the
+counts above were wrong until 0.16.0 and the total with them: they were transcribed
+rather than read off a build, and the six tile archives have not changed since
+0.15.0. The game's installer
 fetches each one from a pinned tag, records the SHA-256 of the bytes that arrived, and
 unpacks them into the mod's own folder, which is where the game reads a tile pack from.
 That digest is what later tells you whether an installed pack has changed since it was
@@ -215,10 +361,10 @@ with `node tools/build-packs.mjs` (needs a built Neo Angband checkout at
 `../neo-angband`) followed by `node tools/pack.mjs`.
 
 <details>
-<summary>Why seven archives rather than 9161 committed files, or one big zip</summary>
+<summary>Why seven archives rather than 9149 committed files, or one big zip</summary>
 
 A loose pack is one PNG per tile. An `archive` payload is one HTTP request and one
-digest; the alternative, a `files` payload, is one request per file, and 9161
+digest; the alternative, a `files` payload, is one request per file, and 9149
 requests is not an install.
 
 Not one archive either. Measured, the whole thing is 24.6 MiB of zip: as a single blob
@@ -249,9 +395,20 @@ files.
 
 ## Status
 
-**0.15.1: complete and working, held below 1.0 on purpose.** 0.15.0 is the first
-version to carry CODE - one `plugin.js` holding the kin rule the game handed over,
-with its own tests in this repository. The engine, the
+**0.16.0: complete and working, held below 1.0 on purpose, with one claim not yet
+made.** 0.15.0 is the first version to carry CODE - one `plugin.js` holding the kin
+rule the game handed over, with its own tests in this repository. 0.16.0 adds the
+shapechange rule to the same file.
+
+**The shapechange rule has not been WATCHED rendering.** Its tier tables and
+palettes are measured exactly, its monster names are checked against Angband's own
+monster list and its tiles against the shipped packs' target maps, and the whole
+path from the switch to an allocated tile is driven through the game's real door
+over real art. None of that is a pixel. Until somebody has seen a shapechanged
+character on screen, "it draws correctly" is a claim this repository does not make;
+see [PLANNED.md](PLANNED.md).
+
+The engine, the
 format, the converter and all six packs are built and in use, and the chain has
 been measured end to end rather than assumed: the converter's 1499 output PNGs are each
 pixel-identical to the cell of the source tilesheet that Angband's own `graf-*.prf`

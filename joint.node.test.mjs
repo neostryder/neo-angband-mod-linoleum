@@ -26,13 +26,14 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import plugin from "./plugin.js";
+import plugin, { SHAPE_TIERS, paletteFor, shapeTileFor, tierFor } from "./plugin.js";
 
 const HERE = fileURLToPath(new URL(".", import.meta.url));
 const GAME = join(HERE, "..", "neo-angband");
 const CORE_PACK = join(GAME, "packages", "content", "pack");
 const TILES = join(GAME, "packages", "web", "public", "tiles");
 const TUTORIALS = join(GAME, "samples", "tutorials");
+const PACKS = join(HERE, "packs");
 
 const built = existsSync(join(GAME, "packages", "web", "src", "tile-registry.ts"));
 const art = existsSync(TILES) && readdirSync(TILES).length > 0;
@@ -160,7 +161,7 @@ describe("the real plugin against the real door", () => {
       ...map.monster.filter(Boolean).map(lino.slotFromAtlas),
       ...map.object.filter(Boolean).map(lino.slotFromAtlas),
     );
-    const hues = lino.hueDerivedSlots(
+    const hues = lino.derivedSlots(
       Array.from({ length: slots }, (_, i) => ({ kind: "asset", asset: `slot-${i}` })),
     );
 
@@ -201,7 +202,7 @@ describe("the real plugin against the real door", () => {
       from: lino.slotFromAtlas(map.monster[donor.ridx]),
       hue: 30,
     });
-    expect(hues.stats()).toEqual({ derived: 2, overflow: 0 });
+    expect(hues.stats()).toEqual({ derived: 2, transformed: 0, overflow: 0 });
     expect({
       monsters: map.monster.filter(Boolean).length,
       objects: map.object.filter(Boolean).length,
@@ -210,5 +211,227 @@ describe("the real plugin against the real door", () => {
     /* And it said what it did, because a silent fill is indistinguishable from
      * none when somebody is trying to work out why their mod is a letter. */
     expect(logs.join()).toMatch(/drew 1 added creature\(s\) and 1 added item\(s\)/u);
+
+    /* ----------------------------------------------------------------------- *
+     * THE SHAPECHANGE RULE, over the same real registry, the same real door and
+     * the same real slot allocator. Everything in `plugin.test.mjs` about it is
+     * arithmetic over a hand-built door; this is the half where the monster
+     * names have to resolve in a registry somebody else built and the tiles have
+     * to be slots the engine really allocated.
+     * ----------------------------------------------------------------------- */
+    const shapeLogs = [];
+    const shapeProviders = [];
+    const shapeRegistry = new TileFillerRegistry((owner, why) => problems.push(`${owner}: ${why}`));
+    const shapeAlloc = lino.derivedSlots(
+      Array.from({ length: slots }, (_, i) => ({ kind: "asset", asset: `slot-${i}` })),
+    );
+    const door = shapeRegistry.forOwner("neo-linoleum");
+    plugin.register(
+      {
+        tiles: {
+          register: (filler) => door.register(filler),
+          player: (provider) => {
+            shapeProviders.push(provider);
+            door.player(provider);
+          },
+        },
+      },
+      {
+        id: "neo-linoleum",
+        flags: { "linoleum.deriveTiles": false, "linoleum.shapeTiles": true },
+        log: (m) => shapeLogs.push(m),
+        registries: { monsters, objects },
+        state: { actor: { player: { cls: { name: "Druid" }, race: { name: "Elf" } } } },
+      },
+    );
+    expect(shapeProviders).toHaveLength(1);
+
+    /* A fresh map, so the shape rule is measured over the pack's own assignments
+     * and not over the two the kin rule added above. */
+    const shapeMap = new core.TileMap();
+    for (const f of [...prefs].sort((a, b) =>
+      a.startsWith("graf-") ? -1 : b.startsWith("graf-") ? 1 : a.localeCompare(b),
+    )) {
+      const body = text(f);
+      if (body !== null) core.parseTilePrefsInto(shapeMap, body, { ...deps, loadFile: text });
+    }
+    shapeRegistry.run(
+      shapeMap,
+      { engine: "linoleum", id: "joint", menuname: dir },
+      shapeAlloc.derive,
+      shapeAlloc.transform,
+    );
+    expect(problems).toEqual([]);
+
+    /* Every band of every form that this pack can draw got a real slot, and the
+     * engine allocated one per (donor, spec) - so the count of transformed slots
+     * is the count of distinct creatures drawn, not the count of requests. */
+    const bands = Object.values(SHAPE_TIERS).reduce((n, tiers) => n + tiers.length, 0);
+    const stats = shapeAlloc.stats();
+    expect(stats.derived).toBe(0);
+    expect(stats.overflow).toBe(0);
+    expect(stats.transformed).toBeGreaterThan(0);
+    expect(stats.transformed).toBeLessThanOrEqual(bands);
+    expect(shapeLogs.join()).toMatch(/drew \d+ shapechange tile\(s\) for a Elf Druid/u);
+
+    /* THE ONE END-TO-END CLAIM: a level 50 Elf Druid in werewolf form draws a
+     * slot that mirrors and repaints Carcharoth's own tile in that character's
+     * palette - resolved from the real registry, allocated by the real engine. */
+    const view = { shape: "werewolf", level: 50, cls: "Druid", race: "Elf" };
+    const drawn = shapeRegistry.playerTile(view);
+    expect(drawn, "no tile for a level 50 werewolf").not.toBeNull();
+    const carcharoth = monsters.races.find((r) => r.name === "Carcharoth, the Jaws of Thirst");
+    expect(carcharoth, "Carcharoth is not in the monster registry").toBeDefined();
+    expect(shapeAlloc.slots()[lino.slotFromAtlas(drawn)]).toEqual({
+      kind: "transformed",
+      from: lino.slotFromAtlas(shapeMap.monster[carcharoth.ridx]),
+      spec: { mirror: true, ramp: paletteFor("Druid", "Elf") },
+    });
+    /* Not the character's usual figure, and not Carcharoth's own tile either. */
+    expect(drawn).not.toEqual(shapeMap.monster[0]);
+    expect(drawn).not.toEqual(shapeMap.monster[carcharoth.ridx]);
+
+    /* Unshapechanged, and a character the table was not built for, both fall
+     * through to whatever the pack drew - which is the whole fallback story. */
+    expect(shapeRegistry.playerTile({ ...view, shape: null })).toBeNull();
+    expect(shapeRegistry.playerTile({ ...view, cls: "Necromancer" })).toBeNull();
+
+    /* A level 1 werewolf is a plain werewolf, and a different slot. */
+    const low = shapeRegistry.playerTile({ ...view, level: 1 });
+    expect(low).not.toBeNull();
+    expect(low).not.toEqual(drawn);
+
+    /* The kin rule was OFF for this pass, so nothing was filled: two switches,
+     * neither gating the other. */
+    expect(shapeMap.monster[ant.ridx]).toBeUndefined();
   });
+});
+
+/**
+ * The shapechange tables against the data they are claims about.
+ *
+ * WHY THIS IS NOT IN `plugin.test.mjs`. Every tier in `SHAPE_TIERS` is an
+ * assertion that a monster with that exact name exists in Angband 4.2.6 and that
+ * these packs draw it. A name that is plausible and absent resolves to no race,
+ * resolves to no tile, and draws nothing - which looks exactly like the rule
+ * being switched off, so it could sit undetected for a long time. Nothing inside
+ * this repository can check it: the monster list is the game's, and the built
+ * packs are gitignored output. So it lives here, beside the other measurement
+ * that needs both halves present, and it FAILS rather than skips.
+ */
+describe("the shape tiers against real Angband data", () => {
+  const SHAPES = join(GAME, "reference", "lib", "gamedata", "shape.txt");
+  const MONSTERS = join(GAME, "reference", "lib", "gamedata", "monster.txt");
+  const data = existsSync(SHAPES) && existsSync(MONSTERS);
+
+  /** Every `name:` value in one of upstream's own gamedata files. */
+  const namesIn = (path) => {
+    const out = new Set();
+    for (const line of readFileSync(path, "utf8").split(/\r?\n/)) {
+      if (line.startsWith("name:")) out.add(line.slice(5));
+    }
+    return out;
+  };
+
+  it("has upstream's own gamedata to measure against", () => {
+    if (!data) {
+      const why = `needs upstream gamedata under ${join(GAME, "reference", "lib", "gamedata")}`;
+      if (optional) {
+        console.warn(`[joint] SKIPPED - ${why}`);
+        return;
+      }
+      throw new Error(`${why}. Run with JOINT_OPTIONAL=1 to skip it locally; CI has it.`);
+    }
+    expect(data).toBe(true);
+  });
+
+  it("names every shape shape.txt defines, and only those", () => {
+    if (!data) return;
+    /* "normal" is the un-shapechanged state and has no creature to draw. Every
+     * other shape in the file must have a table, or that form silently keeps the
+     * pack's own player picture with nothing saying so. */
+    const shapes = [...namesIn(SHAPES)].filter((n) => n !== "normal");
+    expect([...shapes].sort()).toEqual(Object.keys(SHAPE_TIERS).sort());
+  });
+
+  it("names only monsters that really exist, spelled exactly as monster.txt spells them", () => {
+    if (!data) return;
+    const monsters = namesIn(MONSTERS);
+    const missing = [];
+    for (const form of Object.keys(SHAPE_TIERS)) {
+      for (const tier of SHAPE_TIERS[form]) {
+        if (!monsters.has(tier.monster)) missing.push(`${form}/${tier.monster}`);
+      }
+    }
+    /* Named in the failure rather than counted, because the fix is a spelling and
+     * the message should be the spelling. */
+    expect(missing).toEqual([]);
+  });
+
+  it("draws every tier from a monster the shipped packs can actually draw", () => {
+    if (!optional && !existsSync(PACKS)) {
+      throw new Error(
+        `needs the built packs at ${PACKS} (node tools/build-packs.mjs). ` +
+          `Run with JOINT_OPTIONAL=1 to skip it locally; CI builds them.`,
+      );
+    }
+    if (!existsSync(PACKS)) {
+      console.warn("[joint] SKIPPED - no built packs to measure coverage against");
+      return;
+    }
+
+    /* Which monsters each pack's own target map assigns a tile to. The selector
+     * is the middle of the pref line the pack was converted from, so its casing
+     * is graf-*.prf's rather than monster.txt's - hence the fold. */
+    const coverage = new Map();
+    for (const pack of readdirSync(PACKS, { withFileTypes: true }).filter((e) => e.isDirectory())) {
+      const targets = join(PACKS, pack.name, "maps", "targets.txt");
+      if (!existsSync(targets)) continue;
+      const drawn = new Set();
+      for (const line of readFileSync(targets, "utf8").split(/\r?\n/)) {
+        const m = /^target:monster:([^:]+):asset:/u.exec(line);
+        if (m) drawn.add(m[1].toLowerCase());
+      }
+      coverage.set(pack.name, drawn);
+    }
+    expect(coverage.size, `no pack under ${PACKS} carries a target map`).toBeGreaterThan(0);
+
+    const gaps = [];
+    for (const [pack, drawn] of coverage) {
+      for (const form of Object.keys(SHAPE_TIERS)) {
+        for (const tier of SHAPE_TIERS[form]) {
+          if (!drawn.has(tier.monster.toLowerCase())) gaps.push(`${pack}/${tier.monster}`);
+        }
+      }
+    }
+
+    /* THE MEASURED GAP, recorded rather than tolerated silently. Two monsters
+     * added in 4.2.x were only ever added to Shockbolt's graf file upstream, so
+     * four (Beorn) or three (the werewolf) of the six packs have no picture for
+     * them and the tier walks down to the band below. Anything ELSE appearing
+     * here is a name this mod chose badly, which is the case worth failing on.
+     * README.md carries the same two names. */
+    const expected = [
+      "adam-bolt/Beorn, the Mountain Bear",
+      "adam-bolt/werewolf of Sauron",
+      "gervais/Beorn, the Mountain Bear",
+      "nomad/Beorn, the Mountain Bear",
+      "nomad/werewolf of Sauron",
+      "original-tiles/Beorn, the Mountain Bear",
+      "original-tiles/werewolf of Sauron",
+    ];
+    expect([...gaps].sort()).toEqual(
+      expected.filter((e) => coverage.has(e.slice(0, e.indexOf("/")))).sort(),
+    );
+
+    /* And every form still has a drawable band at level 1 in every pack, which
+     * is what makes the walk-down a degradation rather than a hole. */
+    for (const [pack, drawn] of coverage) {
+      for (const form of Object.keys(SHAPE_TIERS)) {
+        const first = SHAPE_TIERS[form][0];
+        expect(drawn.has(first.monster.toLowerCase()), `${pack}/${form}`).toBe(true);
+      }
+    }
+  });
+
 });

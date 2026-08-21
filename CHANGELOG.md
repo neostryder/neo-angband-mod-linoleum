@@ -14,6 +14,47 @@ recorded, because the release exists for them.
 This file is not one of the archived root files, so editing it does not
 invalidate an archive.
 
+## 0.16.0
+
+### Added
+
+- **A shapechanged character is drawn as the creature.** Angband 4.2.6 gives the
+  Druid eight shapes and draws none of them: a character in bear form is still
+  the tile set's usual figure, which is upstream's own behaviour and the game's
+  to keep. Under this mod's packs the map now draws the closest real creature for
+  that form instead, mirrored, and repainted from a five-entry palette picked
+  from the character's class and race. Which creature depends on level, so a
+  werewolf form runs from a plain werewolf to Carcharoth. No new art: every form
+  already had a creature in these packs, and the tile is that creature's own
+  picture transformed at render time.
+- One switch, "Draw a shapechanged character as the creature", **off by
+  default**. The other rule in this mod fills a tile that would otherwise be a
+  letter, so it can only add; this one replaces the picture the pack draws for
+  your character, which is not what installing a tile set asked for.
+- `PLANNED.md`, which records what is intended or incomplete so the changelog
+  does not. Its first entry is this feature: it is wired and measured end to end
+  and has never been watched rendering, so "it draws correctly" is a claim this
+  repository does not yet make.
+- The tier tables are checked against Angband's own `monster.txt` and against
+  every shipped pack's target map on each push. A creature name that is
+  plausible and absent draws nothing, which looks exactly like the switch being
+  off, so that check is not optional.
+
+### Known gaps
+
+- The shapechange rule needs a player-tile seam the game grew after 0.24.0.
+  `manifest.json` still asks for `>=0.23.0`, which is what the other rule needs;
+  on an older game the switch does nothing, everything else works unchanged, and
+  the log says so once.
+- Two creatures the tiers name have no tile in some packs. `werewolf of Sauron`
+  and `Beorn, the Mountain Bear` were added to Angband in 4.2.x and only ever
+  added to Shockbolt's own pref file upstream, so under Original Tiles, Adam Bolt
+  and Nomad neither has one, and under Gervais the bear has none. Those bands
+  fall back to the tier below rather than to nothing.
+- The fox has two tiers and the eagle three, because 4.2.6 contains no fox, no
+  vulpine monster base and no eagle. `README.md` names the candidates that were
+  considered for each and why they were rejected.
+
 ## 0.15.1
 
 ### Fixed
