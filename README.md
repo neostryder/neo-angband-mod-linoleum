@@ -8,7 +8,7 @@ disabling it leaves the game's own graphics untouched.
 
 ## What it is not
 
-Neo Angband already ships the five tile sets Angband itself distributes — Original,
+Neo Angband already ships the five tile sets Angband itself distributes: Original,
 Adam Bolt, David Gervais, Nomad and Shockbolt, the last catalogued as two modes, Dark
 and Light. Those are **core content**: all six rows appear in the Graphics screen with
 no mod enabled, drawn by the classic tilesheet engine, exactly as upstream. Nothing
@@ -37,8 +37,8 @@ my-pack/
   flvr-*.prf                (present in a converted pack, optional in yours)
 ```
 
-The `images/` subdirectory is the tile resolution in pixels — `images/8/` for an 8x8
-set, `images/32/` for a 32x32 one — and it matches the `resolution:` line in
+The `images/` subdirectory is the tile resolution in pixels: `images/8/` for an 8x8
+set, `images/32/` for a 32x32 one, and it matches the `resolution:` line in
 `manifest.txt`. A target map entry then names an image by base name with no path or
 extension:
 
@@ -52,18 +52,65 @@ It also does two things a fixed sheet cannot:
 
 - **Variant pools.** One symbol, creature or item can draw from several tiles instead
   of always the same one. Which tile a given square gets is chosen by map position, so
-  it is identical on every replay of a seed — variety without breaking determinism.
+  it is identical on every replay of a seed: variety without breaking determinism.
 - **Families.** Shared effect metadata across a group of tiles, declared once.
 - **Double-height tiles, declared by name.** A tile listed in `maps/tall.txt` is two
-  cells tall and is drawn over the cell above the one it stands in — how Shockbolt
+  cells tall and is drawn over the cell above the one it stands in, which is how Shockbolt
   draws its larger monsters. A conventional sheet can only do this by reserving a
   band of rows in the image and telling the game which rows those are; here any tile
   can be tall, in a set with no sheet behind it at all.
+- **A tile for a creature the pack has never heard of.** A mod's own monsters and
+  items get a picture here even though no pack was built with them in mind, and a
+  picture of their own rather than a duplicate. See below.
+
+## Tiles for modded content
+
+**Needs Neo Angband 0.23.0 or newer for the second half of this.** The family tile
+described below arrived in 0.22.0 and works today; the recolour that makes it
+distinctive is in the game release after that. On an older game these packs work
+exactly as they always did, and a modded creature borrows its family's tile without
+the recolour, so nothing here breaks on an older engine - it is simply less useful.
+The mod's own `engine` range stays open for that reason.
+
+No tile set was built knowing about somebody's mod, so a modded creature used to be
+a coloured letter standing in a tiled dungeon. The game fixes half of that for every
+tile set: an added monster takes the tile of another creature sharing its family, and
+an added item takes one from another item of its type, so a modded ant is an ant
+everywhere at once without the mod's author naming a single pixel coordinate.
+
+That leaves the other half, and this is where a loose pack can do something a sheet
+cannot. Taking the family's tile means the added ant is **exactly** the base game's
+ant, and nobody can tell which is which: not the player who meets both, and not the
+author checking their own work. A conventional tileset is stuck there, because its
+tiles are cells of a fixed grid and there is no spare cell to put a variant in. A
+loose pack's tiles are separate images, so the engine makes a new one: the family's
+picture with its colour turned.
+
+What that means in practice:
+
+- **Your added creature looks related to its family, and not identical to it.**
+- **Several of them differ from each other too.** Colours are handed out per family,
+  cycling through eight around the wheel, so the first eight creatures added to one
+  family are all distinguishable.
+- **The same mods always give the same colours.** Nothing here touches the game's
+  randomness, the clock or your save.
+- **Nothing you did not add is changed.** Only records a mod ADDED are given a tile
+  this way, so an unmodded game draws exactly what it always drew, and a pack with
+  no mods installed produces none of these at all.
+- **You can still choose the tile yourself.** Name an asset for your monster in a
+  pref file and that wins outright.
+
+One honest limit: turning a colour does nothing to a grey tile. If the family's tile
+is stone, iron or bone, the derived one comes back the same colour it went in. The
+alternative would be stamping a mark onto somebody else's art, which is a bigger lie
+than a similar colour, so the limit stays. Full detail is in
+[docs/LINOLEUM.md](https://github.com/neostryder/neo-angband/blob/master/docs/LINOLEUM.md)
+in the main repository.
 
 ## Building a pack
 
 The converter turns a conventional tileset into a loose pack. It lives in the main
-repository and is **not published to a package registry** — it is a workspace tool, so
+repository and is **not published to a package registry**, because it is a workspace tool, so
 you run it from a clone rather than fetching it:
 
 ```bash
@@ -81,12 +128,12 @@ node packages/linoleum/dist/cli.js --packs original-tiles --out ./my-packs
 `--tiles <dir>` is the tiles root to read (default `reference/lib/tiles`, the Angband
 4.2.6 tree that ships in that repo), `--out <dir>` is where packs are written, and
 `--packs <keys>` picks which to convert. `--help` lists the keys. It converts the six
-tilesets Angband itself ships — `original-tiles`, `adam-bolt`, `gervais`, `nomad`,
-`shockbolt-dark`, `shockbolt-light` — driven by each one's `graf`/`xtra`/`flvr` pref
+tilesets Angband itself ships: `original-tiles`, `adam-bolt`, `gervais`, `nomad`,
+`shockbolt-dark`, `shockbolt-light`, driven by each one's `graf`/`xtra`/`flvr` pref
 files. To convert a tileset from somewhere else you add its geometry and pref-file
 names to `ALL_PACKS` in `packages/linoleum/src/packs.ts`; there is no
 arbitrary-tileset mode on the command line. And nothing stops you writing a pack by
-hand — the format is text plus PNGs, and the converter is a convenience, not a
+hand, since the format is text plus PNGs, and the converter is a convenience, not a
 gatekeeper.
 
 Then point a `tilePacks` entry at the result:
@@ -99,11 +146,11 @@ Then point a `tilePacks` entry at the result:
 
 **`path` is relative to the mod folder**, not to the site. A mod cannot know where a
 host serves it from, and for two of the three ways a mod arrives the host serves it
-from nowhere at all — a folder you picked in a browser has no URL for its files until
+from nowhere at all: a folder you picked in a browser has no URL for its files until
 their bytes are wrapped in a `blob:`, and a mod installed from a repository lives in
 IndexedDB. The game composes your `path` with however that mod's bytes are reached, so
 a pack works identically whichever way it got there. Use `grafID` >= 100 for a set of
-your own; 1–6 are Angband's own numbering, and claiming one of those re-skins that row.
+your own; 1 to 6 are Angband's own numbering, and claiming one of those re-skins that row.
 
 See
 [docs/LINOLEUM.md](https://github.com/neostryder/neo-angband/blob/master/docs/LINOLEUM.md)
@@ -111,8 +158,8 @@ in the main repository for the format in full.
 
 **Packs you build are yours, and the art in them is not ours to license.** If you
 convert a tileset the result carries whatever licence the original art carried:
-converting does not change who owns it, and **a conversion is a modification** — it
-cuts one sheet into hundreds of separate images — so a licence that permits
+converting does not change who owns it, and **a conversion is a modification**: it
+cuts one sheet into hundreds of separate images, so a licence that permits
 redistribution but not modification does not permit a converted pack at all.
 Angband's own licence for the Shockbolt set is exactly that case; Neo Angband
 converts and bundles it under permission its author granted that project
@@ -123,7 +170,7 @@ terms are spelled out.
 
 ## Installing
 
-**All six packs ship here, pre-converted.** `dist/` holds seven archives — one per tile
+**All six packs ship here, pre-converted.** `dist/` holds seven archives, one per tile
 pack, plus a small one for the manifest, this README, the licence and
 [CREDITS.md](CREDITS.md):
 
@@ -139,12 +186,12 @@ pack, plus a small one for the manifest, this README, the licence and
 
 That is 9161 files and 42 MiB of loose art, 24.6 MiB as zip. The game's installer
 fetches each one and checks it against a digest built into the game *before* a single
-byte is unzipped, and unpacks them into the mod's own folder — which is where the game
+byte is unzipped, and unpacks them into the mod's own folder, which is where the game
 reads a tile pack from. Nothing about these packs lives in the game's repository.
 
 You can also just use the folder: clone this repository into your mods directory, or
 point the browser build at it with **Load mod folder**. The archives are ordinary zips,
-so unzip the packs you want beside `manifest.json` — or rebuild them from source art
+so unzip the packs you want beside `manifest.json`, or rebuild them from source art
 with `node tools/build-packs.mjs` (needs a built Neo Angband checkout at
 `../neo-angband`) followed by `node tools/pack.mjs`.
 
@@ -152,7 +199,7 @@ with `node tools/build-packs.mjs` (needs a built Neo Angband checkout at
 <summary>Why seven archives rather than 9161 committed files, or one big zip</summary>
 
 A loose pack is one PNG per tile. An `archive` payload is one HTTP request and one
-digest; the alternative — a `files` payload — is one request per file, and 9161
+digest; the alternative, a `files` payload, is one request per file, and 9161
 requests is not an install.
 
 Not one archive either. Measured, the whole thing is 24.6 MiB of zip: as a single blob
@@ -162,20 +209,20 @@ failed and a fix rewrites one file.
 
 The mod's four root files get their own archive because an installed mod's file list is
 whatever its archives contained, and the game's shared validator wants a top-level
-`manifest.json` from every source alike — so they have to be inside *something*, and
+`manifest.json` from every source alike, so they have to be inside *something*, and
 inside all seven they would collide (the installer rejects a path that arrives from two
 archives rather than silently keeping the last one). `tools/pack.mjs --verify` fails if
 any committed archive has drifted from a fresh conversion, and CI runs it on every push.
 
 That last point has a consequence worth stating plainly, because it does not look like
 one: **this README is shipped content.** `manifest.json`, `README.md`, `LICENSE.md` and
-`CREDITS.md` are the four files inside `neo-linoleum-mod.zip`, so editing any of them —
-even a typo fix, even a link — changes that archive's digest and makes the committed
+`CREDITS.md` are the four files inside `neo-linoleum-mod.zip`, so editing any of them
+(even a typo fix, even a link) changes that archive's digest and makes the committed
 copy stale. Re-run `node tools/pack.mjs` in the same commit. A documentation-only change
 here is still a build.
 
-The zips are written deterministically — entries sorted, timestamps fixed, stdlib
-`zlib` only — so a digest is a function of content and rebuilding anywhere gives the
+The zips are written deterministically, with entries sorted, timestamps fixed, stdlib
+`zlib` only, so a digest is a function of content and rebuilding anywhere gives the
 same bytes. Verified: two builds into different directories produced seven identical
 files.
 
@@ -183,18 +230,18 @@ files.
 
 ## Status
 
-**0.14.3 — complete and working, held below 1.0 on purpose.** The engine, the
+**0.14.4: complete and working, held below 1.0 on purpose.** The engine, the
 format, the converter and all six packs are built and in use, and the chain has
 been measured end to end rather than assumed: the converter's 1499 output PNGs are each
 pixel-identical to the cell of the source tilesheet that Angband's own `graf-*.prf`
 says they came from; enabling this mod adds its six Graphics rows and disabling it
 removes them and nothing else, leaving the game's own six untouched; and choosing one
-draws the map through the loose-pack engine — same 1110 tiled cells as the tilesheet
+draws the map through the loose-pack engine, the same 1110 tiled cells as the tilesheet
 engine on the same view, agreeing on ~96% of map pixels, with the remainder on cell
 seams where the two engines round an 8-pixel source to a fractional destination height
 differently. `packages/web/src/linoleum-equivalence.test.ts` in the main repository
 holds the mechanical form of the first claim for **five** bundled packs, not just this
-one — Shockbolt included, which is what turned up a comparator that cropped 64x64 out
+one, Shockbolt included, which is what turned up a comparator that cropped 64x64 out
 of a double-height 64x128 tile.
 
 What 1.0 is waiting on is exposure, not a known defect: this format has been driven by
@@ -211,7 +258,7 @@ licence permits. Convert your own copies freely; check before you share.
 ## Working on this repo
 
 This repository is public, and so is the main one. A privacy scan refuses a handful
-of strings in either — see `CONTRIBUTING.md` in
+of strings in either. See `CONTRIBUTING.md` in
 [neo-angband](https://github.com/neostryder/neo-angband). The scanner lives there and
 is used from there rather than copied here, so there is nothing to install; point this
 clone's hooks at it once:
@@ -221,7 +268,7 @@ git config core.hooksPath /path/to/neo-angband/.githooks
 ```
 
 That is the gate that sees a **new** file before it is committed. The `privacy`
-workflow is the later one — it reads tracked files, so by the time it can see a new
+workflow is the later one, because it reads tracked files, so by the time it can see a new
 file the bytes are already published. Both, not either.
 
 ## Questions, or something wrong
@@ -245,7 +292,7 @@ in the main repository is the complete answer.
 
 ## Licence
 
-Same dual licence as Neo Angband and Angband — GPL v2 or the Angband licence. See
+Same dual licence as Neo Angband and Angband: GPL v2 or the Angband licence. See
 [LICENSE.md](LICENSE.md).
 
 The **art** in any pack is a separate matter from the code here, and is governed by
