@@ -7,12 +7,13 @@ go looking for it.
 An item leaves this file by landing, by being found not to apply, or by being found
 unreachable in Angband 4.2.6 - not by going quiet.
 
-## Open: the shapechange rule has never been seen
+## Landed: the shapechange rule has been watched rendering
 
 **Opened with 0.16.0.** The rule that draws a shapechanged character as the
-creature is wired end to end and has never produced a pixel anybody looked at.
+creature has now produced a pixel someone looked at, over the installed desktop
+build's own CDP port rather than a test's stand-in door.
 
-What IS measured, and it is not nothing:
+What was already measured before this, and is still true:
 
 - Every monster the tier tables name exists in `reference/lib/gamedata/monster.txt`
   verbatim, and every shape in `shape.txt` has a table.
@@ -25,17 +26,16 @@ What IS measured, and it is not nothing:
   and asserts that a level 50 Elf Druid in werewolf form ends up on a slot that
   mirrors and repaints Carcharoth's own tile in that character's palette.
 
-What is NOT measured is the part a player sees. A slot that is allocated correctly
-still has to survive `getImageData`, the ramp write-back and the mirrored blit, and
-this project has shipped several seams that were correct and invisible. The
-instrument for it is the installed desktop build over CDP, which is the only one of
-the three that reports pixels.
+What is now ALSO measured is the part a player sees: a level 2 Human Druid, under
+Adam Bolt's tiles (neo-linoleum), cast Fox Form and the map tile at the player's
+own square changed from the normal figure to a small quadruped rendered in the
+"wild" palette's dark forest greens - visibly mirrored, tracking the player through
+a move rather than sitting fixed as terrain, and distinct at a glance from both the
+character's own tile and the donor wild dog's native reddish-brown colouring.
 
-**Done means:** a screenshot of a shapechanged character under a linoleum pack, for
-at least two forms and two class palettes, with what was seen written down - whether
-the mirror is visible, whether the palette reads as the class, and whether the tile
-is legible at the pack's own resolution. Two of those are aesthetic judgements that
-no test can make, which is the other half of why this is open.
+This was one form and one class palette under one pack, not the two-and-two survey
+below - that broader pass, and the aesthetic judgements it requires, stays open
+under "the palette is a first draft".
 
 ## Open: the palette is a first draft
 
