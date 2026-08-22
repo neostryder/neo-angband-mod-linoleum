@@ -299,10 +299,12 @@ export const SHAPE_TIERS = {
  * the fifty-four class-and-race pairs a ramp of its own.
  */
 export const CLASS_PALETTES = {
-  /* The two classes that actually change shape in 4.2.6 - the Druid casts every
-   * one of these forms, and the Ranger is the other class at home outdoors - so
-   * their palette is the earthy one: forest shadow through sunlit leaf. It is
-   * the palette most players will ever see, which is why it got the most care. */
+  /* The Druid casts every one of these forms; the Ranger casts none of them and
+   * is grouped here for a different reason - it is the other class at home
+   * outdoors, not a third shapechanger (the three classes that actually change
+   * shape in 4.2.6 are Druid, Necromancer and Blackguard, below). This is the
+   * earthy palette, forest shadow through sunlit leaf, and the one most players
+   * will ever see, which is why it got the most care. */
   Druid: "wild",
   Ranger: "wild",
   /* Warm gold and bone. Bright, because a holy warrior wearing a wolf should
