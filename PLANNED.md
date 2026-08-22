@@ -44,7 +44,7 @@ than derived, and the colour choices are the part of this feature most likely to
 be wrong. Band count per pack resolution, whether a full palette remap is too
 heavy compared to a blend, and whether the near-black class ramps vanish against
 a dark pack all remain open pending a broader look at rendered output. Tracked as
-issue #2.
+neo-angband#27.
 
 ## Open: two mods answering for the player's cell is unreported
 
