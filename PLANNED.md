@@ -39,23 +39,12 @@ under "the palette is a first draft".
 
 ## Open: the palette is a first draft
 
-Five bands, six class palettes and eleven race highlights, all authored rather than
-derived, and the colour choices are the part of this feature most likely to be
-wrong. Three things to revisit once it has been seen:
-
-- **The band count.** Five is a judgement about tiles between 8 and 64 pixels wide
-  with the small end weighted. Shockbolt's 64x64 art carries far more shading than
-  five bands preserve, so it may want more; the 8x8 packs may want fewer. A per-pack
-  count is possible - the pack's own resolution is known when the table is built -
-  and is deliberately not done yet, because a knob added before anybody has looked
-  is a knob set from a guess.
-- **Whether a full remap is too much.** The current transform replaces the palette
-  outright. Blending the ramp with the creature's own colours at some strength would
-  keep more of the art and read less as "the player's colours", and which of those
-  matters more is not answerable from here.
-- **The dark palette against a dark pack.** Necromancer and Blackguard share a
-  near-black ramp, and Shockbolt Dark is already dark. A figure that vanishes into
-  the floor is the specific risk.
+Five bands, six class palettes and eleven race highlights are all authored rather
+than derived, and the colour choices are the part of this feature most likely to
+be wrong. Band count per pack resolution, whether a full palette remap is too
+heavy compared to a blend, and whether the near-black class ramps vanish against
+a dark pack all remain open pending a broader look at rendered output. Tracked as
+issue #2.
 
 ## Open: two mods answering for the player's cell is unreported
 
