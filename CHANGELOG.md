@@ -42,10 +42,10 @@ invalidate an archive.
 
 ### Known gaps
 
-- The shapechange rule needs a player-tile seam the game grew after 0.24.0.
-  `manifest.json` still asks for `>=0.23.0`, which is what the other rule needs;
-  on an older game the switch does nothing, everything else works unchanged, and
-  the log says so once.
+- The shapechange rule needs a player-tile seam the game first shipped in
+  0.27.0. `manifest.json` still asks for `>=0.23.0`, which is what the other
+  rule needs; on an older game the switch does nothing, everything else works
+  unchanged, and the log says so once.
 - Two creatures the tiers name have no tile in some packs. `werewolf of Sauron`
   and `Beorn, the Mountain Bear` were added to Angband in 4.2.x and only ever
   added to Shockbolt's own pref file upstream, so under Original Tiles, Adam Bolt

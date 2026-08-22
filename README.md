@@ -251,9 +251,9 @@ which is what an unmodded game draws:
 - **The tile set is one of Angband's own sheets** rather than a linoleum pack. A
   fixed sheet is one image cut into a grid with no spare cell to put a variant in,
   so there is nothing to allocate.
-- **The game has no player-tile seam.** This needs a door the game grew after
-  0.24.0. On an older game the switch does nothing, everything else in this mod
-  works unchanged, and the log says so once.
+- **The game has no player-tile seam.** This needs a door the game first shipped
+  in 0.27.0. On an older game the switch does nothing, everything else in this
+  mod works unchanged, and the log says so once.
 - **A class or race this mod has no palette for**, which means one a content mod
   added. Guessing that a modded class is "martial" would put a colour on somebody
   else's character with nothing behind the choice, so it declines instead.

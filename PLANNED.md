@@ -66,15 +66,13 @@ the same menu, the same grafID - and has no row for this one. It is a gap in the
 GAME rather than here, and it is recorded in that repository's own planned list; it
 is noted here because this mod is currently the only thing that would trigger it.
 
-## Open: the engine floor does not name the version it needs
+## Landed: the engine floor now names the version the shapechange rule needs
 
-`manifest.json` still asks for `>=0.23.0`, which is what the kin rule needs. The
-shapechange rule needs the player-tile door, which arrived after 0.24.0 and has no
-released version number yet. The mod probes for the door at registration and says so
-in the log when it is absent, so an older game degrades cleanly rather than
-breaking - but a player who turns the switch on and reads nothing has to find the
-log to learn why. When the game next cuts a version, the floor and the README
-paragraph should name it.
+`manifest.json`'s overall floor stays `>=0.23.0`, which is what the kin rule
+needs - the shapechange rule degrades cleanly on an older game rather than
+raising the floor for everybody. The README now names 0.27.0 as the release
+that first shipped the player-tile door, since that is the version this got
+tagged against.
 
 ## Not planned: more tiers for the fox and the eagle
 
