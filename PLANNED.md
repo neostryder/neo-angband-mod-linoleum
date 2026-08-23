@@ -46,14 +46,13 @@ heavy compared to a blend, and whether the near-black class ramps vanish against
 a dark pack all remain open pending a broader look at rendered output. Tracked as
 neo-angband#27.
 
-## Open: two mods answering for the player's cell is unreported
+## Landed: two mods answering for the player's cell is now reported
 
 The game's player-tile door takes the first non-null answer in load order. Two mods
-that both answer for the same character both had an opinion and one is silently
-dropped. `mod-conflicts.ts` in the game reports contested slots - two mods wanting
-the same menu, the same grafID - and has no row for this one. It is a gap in the
-GAME rather than here, and it is recorded in that repository's own planned list; it
-is noted here because this mod is currently the only thing that would trigger it.
+that both answer for the same character both had an opinion and one was silently
+dropped, with no row for it in `mod-conflicts.ts`. The game now reports this as a
+contested "PLAYER TILE" slot alongside the existing menu and grafID rows. Tracked as
+neo-angband#10.
 
 ## Landed: the engine floor now names the version the shapechange rule needs
 
