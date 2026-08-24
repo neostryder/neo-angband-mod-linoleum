@@ -14,6 +14,18 @@ recorded, because the release exists for them.
 This file is not one of the archived root files, so editing it does not
 invalidate an archive.
 
+## 0.17.0
+
+### Changed
+
+- The six selectable Graphics rows now ship their compact source tilesheets and
+  pref texts, not 9,149 pre-sliced PNGs. The game converts a pack only when that
+  row is first selected, then caches the same loose output locally. Gervais now
+  installs as a four-entry source archive rather than an archive beyond the
+  installer's entry limit.
+- Shockbolt Dark and Light share their one upstream atlas in a single source
+  archive, avoiding a duplicate 17 MiB PNG.
+
 ## 0.16.1
 
 Added a Terms of Use and a shared Code of Conduct alongside the existing

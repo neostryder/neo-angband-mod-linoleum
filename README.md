@@ -336,54 +336,54 @@ terms are spelled out.
 
 ## Installing
 
-**All six packs ship here, pre-converted.** `dist/` holds seven archives, one per tile
-pack, plus a small one for the manifest, this README, the licence and
-[CREDITS.md](CREDITS.md):
+**The source sheets ship here; loose files are made on demand.** `dist/` holds one
+compact source archive per distinct atlas, plus a small root archive for the
+manifest, this README, the licence and [CREDITS.md](CREDITS.md). The game converts a
+sheet the first time its Graphics row is selected and keeps those generated loose files
+in its local IndexedDB cache. Switching to that row again reuses the cache.
 
 | Archive | Files | Size |
 | --- | --- | --- |
-| `neo-linoleum-mod.zip` | 5 | 27 KiB |
-| `neo-linoleum-original-tiles.zip` | 1505 | 0.5 MiB |
-| `neo-linoleum-adam-bolt.zip` | 1495 | 0.9 MiB |
-| `neo-linoleum-gervais.zip` | 1500 | 1.5 MiB |
-| `neo-linoleum-nomad.zip` | 1469 | 0.5 MiB |
-| `neo-linoleum-shockbolt-dark.zip` | 1590 | 10.6 MiB |
-| `neo-linoleum-shockbolt-light.zip` | 1590 | 10.6 MiB |
+| `neo-linoleum-mod.zip` | 5 | 0.03 MiB |
+| `neo-linoleum-original-tiles.zip` | 4 | 0.16 MiB |
+| `neo-linoleum-adam-bolt.zip` | 4 | 0.46 MiB |
+| `neo-linoleum-gervais.zip` | 4 | 1.26 MiB |
+| `neo-linoleum-nomad.zip` | 4 | 0.05 MiB |
+| `neo-linoleum-shockbolt.zip` | 5 | 16.75 MiB |
 
-That is 9154 files, 9149 of them loose art at 42 MiB, 24.6 MiB as zip. Three of the
-counts above were wrong until 0.16.0 and the total with them: they were transcribed
-rather than read off a build, and the six tile archives have not changed since
-0.15.0. The game's installer
-fetches each one from a pinned tag, records the SHA-256 of the bytes that arrived, and
-unpacks them into the mod's own folder, which is where the game reads a tile pack from.
-That digest is what later tells you whether an installed pack has changed since it was
-installed; what stops the download itself changing under you is the tag. Nothing about
-these packs lives in the game's repository.
+That is 26 archive entries and 18.7 MiB today. Shockbolt Dark and Light share the same
+atlas, so they deliberately share one five-file source archive; keeping two copies
+would make the compact form larger than the old loose-pack payload. The game's
+installer fetches each archive from a pinned tag, records the SHA-256 of the bytes that
+arrived, and unpacks them into the mod's own folder. The cache contains only derived
+files: reinstalling or updating the mod starts a fresh conversion namespace. Nothing
+about these packs lives in the game's repository.
 
 You can also just use the folder: clone this repository into your mods directory, or
-point the browser build at it with **Load mod folder**. The archives are ordinary zips,
-so unzip the packs you want beside `manifest.json`, or rebuild them from source art
-with `node tools/build-packs.mjs` (needs a built Neo Angband checkout at
-`../neo-angband`) followed by `node tools/pack.mjs`.
+point the browser build at it with **Load mod folder**. Unzip the source archives beside
+`manifest.json`, or rebuild them from source art with `node tools/build-packs.mjs`
+(needs a built Neo Angband checkout at `../neo-angband`) followed by
+`node tools/pack.mjs`.
 
 <details>
-<summary>Why seven archives rather than 9149 committed files, or one big zip</summary>
+<summary>Why six archives rather than 9149 committed loose files, or one big zip</summary>
 
-A loose pack is one PNG per tile. An `archive` payload is one HTTP request and one
-digest; the alternative, a `files` payload, is one request per file, and 9149
-requests is not an install.
+A loose pack is one PNG per tile, but the shipped input is an atlas plus its mapping
+texts. An `archive` payload is one HTTP request and one digest; the alternative, a
+`files` payload, would be a request per input file and makes partial installs harder to
+diagnose.
 
-Not one archive either. Measured, the whole thing is 24.6 MiB of zip: as a single blob
-that is rewritten in full whenever one tile changes, and it carries one digest whose
-failure says only "something in here is wrong". Per pack, a digest names which pack
-failed and a fix rewrites one file.
+Not one archive either. Per source atlas, a digest names the source that failed and a
+fix rewrites only that archive. Shockbolt is one source atlas shared by two rows, so it
+is intentionally one archive rather than a duplicated pair.
 
 The mod's five root files get their own archive because an installed mod's file list is
 whatever its archives contained, and the game's shared validator wants a top-level
 `manifest.json` from every source alike, so they have to be inside *something*, and
-inside all seven they would collide (the installer rejects a path that arrives from two
+inside all six they would collide (the installer rejects a path that arrives from two
 archives rather than silently keeping the last one). `tools/pack.mjs --verify` fails if
-any committed archive has drifted from a fresh conversion, and CI runs it on every push.
+any committed archive has drifted from freshly staged source art, and CI runs it on every
+push.
 
 That last point has a consequence worth stating plainly, because it does not look like
 one: **this README is shipped content.** `manifest.json`, `plugin.js`, `README.md`,
@@ -401,7 +401,7 @@ files.
 
 ## Status
 
-**0.16.0: complete and working, held below 1.0 on purpose, with one claim not yet
+**0.17.0: complete and working, held below 1.0 on purpose, with one claim not yet
 made.** 0.15.0 is the first version to carry CODE - one `plugin.js` holding the kin
 rule the game handed over, with its own tests in this repository. 0.16.0 adds the
 shapechange rule to the same file.

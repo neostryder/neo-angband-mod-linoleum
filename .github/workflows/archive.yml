@@ -1,6 +1,6 @@
-# The committed archives must match a fresh conversion of the source art.
+# The committed archives must match freshly staged compact source art.
 #
-# dist/ holds seven zips: one per tile pack, plus neo-linoleum-mod.zip carrying
+# dist/ holds six zips: one per distinct source atlas, plus neo-linoleum-mod.zip carrying
 # manifest.json, plugin.js, README.md, LICENSE.md and CREDITS.md. Those five are duplicated
 # from the repository root, because an installed mod's file list is whatever its
 # archives contained and the game's validator wants a top-level manifest.json from
@@ -8,20 +8,15 @@
 # editing manifest.json without rebuilding is a stale archive, and a player's
 # installed mod would behave like last week's with nothing to say so.
 #
-# The packs are converted from the main repository's tilesheets - upstream's own
-# art, which is core game data there - so this checks out both and builds them
-# first. tools/build-packs.mjs FAILS on missing source art rather than skipping,
-# and tools/pack.mjs FAILS if any declared pack has no built directory, so a
-# conversion that did not happen cannot reach the verify step as a green tick.
+# The source sheets come from the main repository's tilesheets - upstream's own
+# art, which is core game data there. tools/build-packs.mjs FAILS on missing source
+# art rather than skipping, and tools/pack.mjs fails if a declared compact source
+# file was not staged, so an incomplete source archive cannot reach green.
 #
 # THE GAME IS CHECKED OUT AT ITS DEFAULT BRANCH, UNPINNED, and that is deliberate
 # even though it makes this job depend on a repository nobody here controls. The
-# archives are a function of the converter, so pinning the converter would make
-# "current" mean "current as of whenever this was pinned" - and the one time these
-# archives went stale (2026-07-31, when the engine's packages were renamed to
-# @rpgm-tools/* and the stamp the converter writes changed with them) it was
-# exactly this unpinned checkout that noticed. A local run agreed with a cached
-# conversion and said nothing.
+# archives are a function of the converter's declared inputs, so pinning the
+# source layout would make "current" mean "current as of whenever this was pinned".
 #
 # The cost is real and worth naming: a push to the GAME can turn this repository
 # red on a day nothing here changed. So the job records which commit of the game
@@ -117,7 +112,7 @@ jobs:
         working-directory: neo-angband
         run: pnpm --dir packages/web run sync-tiles
 
-      - name: Convert all six packs
+      - name: Stage all compact source archives
         working-directory: mod
         run: node tools/build-packs.mjs --game ../neo-angband
 

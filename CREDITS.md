@@ -16,32 +16,34 @@ That file covers the tilesheets, which is the form the game itself draws, and it
 all of that art the game's own repository holds.
 
 A **loose pack** is the same art in a different form: one PNG per tile, cut out of
-that sheet. Producing one is a second, separate use of the art, and it belongs to this
-mod: nothing in the game cuts up a tilesheet unless neo-linoleum is installed. So the
-attribution for the converted form lives here, and this file is inside every archive,
-so it arrives with the art wherever the art goes.
+that sheet. The game now produces it locally when a player first selects a row; that is
+still a second, separate use of the art, and it belongs to this mod. Nothing in the game
+cuts up a tilesheet unless neo-linoleum is installed. So the attribution for the
+converted form lives here, and this file is inside every archive, so it arrives with the
+art wherever the art goes.
 
 ## What this repository ships
 
-All six packs the manifest declares, pre-converted, as seven archives under `dist/`:
+All six selectable packs ship as compact source tilesheets in six archives under `dist/`:
 
 | Archive | Contents | Source art's terms |
 | --- | --- | --- |
 | `neo-linoleum-mod.zip` | manifest, README, LICENSE, this file | this mod's own |
-| `neo-linoleum-original-tiles.zip` | 8x8 Original | GPL v2 or the Angband licence |
-| `neo-linoleum-adam-bolt.zip` | 16x16 Adam Bolt | redistributable and modifiable for any purpose |
-| `neo-linoleum-gervais.zip` | 32x32 David Gervais | Creative Commons Attribution 3.0 |
-| `neo-linoleum-nomad.zip` | 8x16 Nomad | GPL v2 or the Angband licence |
-| `neo-linoleum-shockbolt-dark.zip` | 64x64 Shockbolt, Dark | © Raymond "Shockbolt" Gaustadnes 2012, see below |
-| `neo-linoleum-shockbolt-light.zip` | 64x64 Shockbolt, Light | © Raymond "Shockbolt" Gaustadnes 2012, see below |
+| `neo-linoleum-original-tiles.zip` | 8x8 Original atlas + prefs | GPL v2 or the Angband licence |
+| `neo-linoleum-adam-bolt.zip` | 16x16 Adam Bolt atlas + prefs | redistributable and modifiable for any purpose |
+| `neo-linoleum-gervais.zip` | 32x32 David Gervais atlas + prefs | Creative Commons Attribution 3.0 |
+| `neo-linoleum-nomad.zip` | 8x16 Nomad atlas + prefs | GPL v2 or the Angband licence |
+| `neo-linoleum-shockbolt.zip` | shared 64x64 Shockbolt atlas + Dark/Light prefs | © Raymond "Shockbolt" Gaustadnes 2012, see below |
 
-Measured: 9161 files and 42 MiB of loose art, 24.6 MiB as zip. The five sets' terms
-differ from one another, so **do not read "shipped with neo-linoleum" as one licence.**
-Angband 4.2.6's `docs/copying.rst` is the authoritative statement for all five.
+Measured: 26 archive entries and 18.7 MiB as zip. First enable produces the same loose
+art locally and caches it in the game. The five sets' terms differ from one another, so
+**do not read "shipped with neo-linoleum" as one licence.** Angband 4.2.6's
+`docs/copying.rst` is the authoritative statement for all five.
 
-The loose files are not committed; the archives are. `tools/build-packs.mjs`
-reconverts them from a Neo Angband checkout and `node tools/pack.mjs --verify` proves
-the committed archives match a fresh conversion. CI runs that on every push.
+The generated loose files are not committed; the source archives are.
+`tools/build-packs.mjs` stages them from a Neo Angband checkout and
+`node tools/pack.mjs --verify` proves the committed archives match those sources. CI
+runs that on every push.
 
 ## The Shockbolt packs
 
