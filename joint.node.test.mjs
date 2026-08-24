@@ -22,9 +22,10 @@
  * play.
  */
 
-import { existsSync, readFileSync, readdirSync } from "node:fs";
-import { join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { basename, dirname, join } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { describe, expect, it } from "vitest";
 import plugin, { SHAPE_TIERS, paletteFor, shapeTileFor, tierFor } from "./plugin.js";
 
@@ -33,7 +34,7 @@ const GAME = join(HERE, "..", "neo-angband");
 const CORE_PACK = join(GAME, "packages", "content", "pack");
 const TILES = join(GAME, "packages", "web", "public", "tiles");
 const TUTORIALS = join(GAME, "samples", "tutorials");
-const PACKS = join(HERE, "packs");
+const CONVERTER = join(GAME, "packages", "linoleum", "dist", "index.js");
 
 const built = existsSync(join(GAME, "packages", "web", "src", "tile-registry.ts"));
 const art = existsSync(TILES) && readdirSync(TILES).length > 0;
@@ -316,8 +317,11 @@ describe("the real plugin against the real door", () => {
  * resolves to no tile, and draws nothing - which looks exactly like the rule
  * being switched off, so it could sit undetected for a long time. Nothing inside
  * this repository can check it: the monster list is the game's, and the built
- * packs are gitignored output. So it lives here, beside the other measurement
- * that needs both halves present, and it FAILS rather than skips.
+ * packs used to be gitignored output. They are now generated only when a player
+ * selects a tilesheet, so this measurement builds a throwaway loose-pack tree
+ * from this mod's staged source atlases with the host converter. That encoder and
+ * the browser's on-demand converter share `planTilesheetConversion`, which owns
+ * the target maps this check measures. It still FAILS rather than skips.
  */
 describe("the shape tiers against real Angband data", () => {
   const SHAPES = join(GAME, "reference", "lib", "gamedata", "shape.txt");
@@ -368,33 +372,108 @@ describe("the shape tiers against real Angband data", () => {
     expect(missing).toEqual([]);
   });
 
-  it("draws every tier from a monster the shipped packs can actually draw", () => {
-    if (!optional && !existsSync(PACKS)) {
+  it("draws every tier from a monster the shipped packs can actually draw", { timeout: 60_000 }, async () => {
+    /* The preceding joint checks already report the real reason a checkout is
+     * absent. JOINT_OPTIONAL is only for that no-sibling-checkout case; once the
+     * game is here this measurement is never optional. */
+    if (!built || !art || !data) return;
+    if (!existsSync(CONVERTER)) {
       throw new Error(
-        `needs the built packs at ${PACKS} (node tools/build-packs.mjs). ` +
-          `Run with JOINT_OPTIONAL=1 to skip it locally; CI builds them.`,
+        `needs the built host converter at ${CONVERTER} (run pnpm build in ${GAME})`,
       );
     }
-    if (!existsSync(PACKS)) {
-      console.warn("[joint] SKIPPED - no built packs to measure coverage against");
-      return;
+
+    const manifest = JSON.parse(readFileSync(join(HERE, "manifest.json"), "utf8"));
+    const declared = manifest.tilePacks;
+    if (!Array.isArray(declared) || declared.length === 0) {
+      throw new Error("manifest.json declares no tilesheet packs to measure");
     }
 
-    /* Which monsters each pack's own target map assigns a tile to. The selector
-     * is the middle of the pref line the pack was converted from, so its casing
-     * is graf-*.prf's rather than monster.txt's - hence the fold. */
+    /* This is the host's Node encoder, not the retired mod build output. It
+     * reads the exact staged bytes a player downloads and writes a fresh loose
+     * tree, including every cropped PNG. Its maps come from the same shared plan
+     * that linoleum-cache.ts uses before Canvas crops those source bytes in the
+     * browser. */
+    const linoleum = await import(pathToFileURL(CONVERTER).href);
+    const outputRoot = mkdtempSync(join(tmpdir(), "neo-linoleum-shape-tiers-"));
     const coverage = new Map();
-    for (const pack of readdirSync(PACKS, { withFileTypes: true }).filter((e) => e.isDirectory())) {
-      const targets = join(PACKS, pack.name, "maps", "targets.txt");
-      if (!existsSync(targets)) continue;
-      const drawn = new Set();
-      for (const line of readFileSync(targets, "utf8").split(/\r?\n/)) {
-        const m = /^target:monster:([^:]+):asset:/u.exec(line);
-        if (m) drawn.add(m[1].toLowerCase());
+    try {
+      for (const declaredPack of declared) {
+        const source = declaredPack?.tilesheet;
+        if (
+          typeof declaredPack?.path !== "string" ||
+          source === null ||
+          typeof source !== "object" ||
+          typeof source.key !== "string" ||
+          typeof source.packId !== "string" ||
+          typeof source.displayName !== "string" ||
+          typeof source.image !== "string" ||
+          !Array.isArray(source.prefFiles) ||
+          typeof source.resolution !== "number"
+        ) {
+          throw new Error("each manifest tilePacks entry needs a complete tilesheet source declaration");
+        }
+
+        const sourceDir = dirname(source.image);
+        if (source.prefFiles.some((path) => typeof path !== "string" || dirname(path) !== sourceDir)) {
+          throw new Error(`${source.key}: tilesheet image and pref files must share one staged directory`);
+        }
+        const prefFiles = source.prefFiles.map((path) => basename(path));
+        if (prefFiles.length === 0) throw new Error(`${source.key}: tilesheet source declares no pref files`);
+
+        /* Match browserLinoleumConverter's PackConfig, but point its source
+         * directory at this mod's staged archive rather than the host's bundled
+         * tiles. No pre-converted pack is read or reused. */
+        const config = {
+          key: source.key,
+          packId: source.packId,
+          displayName: source.displayName,
+          sourceMode: source.key,
+          sourceDirectory: join(declaredPack.path, sourceDir),
+          imageFile: basename(source.image),
+          resolution: source.resolution,
+          ...(source.tileWidth === undefined ? {} : { tileWidth: source.tileWidth }),
+          ...(source.tileHeight === undefined ? {} : { tileHeight: source.tileHeight }),
+          ...(source.overdrawRow === undefined ? {} : { overdrawRow: source.overdrawRow }),
+          ...(source.overdrawMax === undefined ? {} : { overdrawMax: source.overdrawMax }),
+          primaryPref: prefFiles[0],
+          prefFiles,
+        };
+        const sourceRoot = join(HERE, config.sourceDirectory);
+        if (!existsSync(join(sourceRoot, config.imageFile))) {
+          throw new Error(
+            `${source.key}: needs staged source art at ${sourceRoot} (node tools/build-packs.mjs)`,
+          );
+        }
+        for (const prefFile of config.prefFiles) {
+          if (!existsSync(join(sourceRoot, prefFile))) {
+            throw new Error(`${source.key}: staged source is missing ${prefFile} under ${sourceRoot}`);
+          }
+        }
+        linoleum.buildPackExport(config, HERE, outputRoot);
+
+        /* Which monsters this freshly converted pack assigns an actual cropped
+         * image to. The selector's casing comes from graf-*.prf rather than
+         * monster.txt, hence the fold. */
+        const targets = join(outputRoot, config.key, "maps", "targets.txt");
+        const drawn = new Set();
+        for (const line of readFileSync(targets, "utf8").split(/\r?\n/)) {
+          const m = /^target:monster:([^:]+):asset:([^:]+)$/u.exec(line);
+          if (m) {
+            const [, monster, asset] = m;
+            expect(
+              existsSync(join(outputRoot, config.key, "images", String(config.resolution), `${asset}.png`)),
+              `${config.key}/${monster} maps to a missing converted image`,
+            ).toBe(true);
+            drawn.add(monster.toLowerCase());
+          }
+        }
+        coverage.set(config.key, drawn);
       }
-      coverage.set(pack.name, drawn);
+    } finally {
+      rmSync(outputRoot, { recursive: true, force: true });
     }
-    expect(coverage.size, `no pack under ${PACKS} carries a target map`).toBeGreaterThan(0);
+    expect(coverage.size, "no declared source archive produced a target map").toBeGreaterThan(0);
 
     const gaps = [];
     for (const [pack, drawn] of coverage) {
