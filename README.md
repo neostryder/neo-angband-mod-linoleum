@@ -18,6 +18,12 @@ here is needed to see them, and nothing here replaces them.
 
 A different way to store a tile set, and an engine that draws it.
 
+![The Graphics screen with neo-linoleum enabled: six extra rows below core's own six](docs/img/linoleum-graphics-menu.jpg)
+
+Enabling the mod adds six rows to the Graphics screen, one per source tileset, each
+tagged `[neo-linoleum]` and drawn by this mod's own engine rather than the classic
+one - visible proof that the two engines coexist rather than one replacing the other.
+
 A conventional tileset is one big image plus pixel coordinates: to change the orc you
 open a 4096-pixel-wide PNG, find the orc, and edit in place. A **loose pack** is a
 directory of individual images addressed by readable names:
