@@ -27,11 +27,51 @@
 # red on a day nothing here changed. So the job records which commit of the game
 # it built against, because "the archives no longer match" is useless without
 # "match what".
+#
+# TWO SEPARATE TRIGGERS, for two separate questions. `push`/`pull_request` are
+# PATH-FILTERED to the files that actually go into an archive or that this job's
+# own steps depend on: a local change outside that list cannot make the archive
+# stale, so running the full conversion again would only repeat an old verdict
+# and send an identical failure email if one was already outstanding (2026-08-23:
+# one stale root archive kept failing on every subsequent unrelated push until it
+# was rebuilt, well past the point where the first failure had already said so).
+# `schedule` is the separate, UNCONDITIONAL daily run that exists precisely for
+# the upstream-drift case above, where nothing in this list changes but the game's
+# converter or source art did - path filters would otherwise blind CI to exactly
+# the failure mode this job was built to catch.
 name: archive
 
 on:
   push:
+    paths:
+      - manifest.json
+      - plugin.js
+      - README.md
+      - LICENSE.md
+      - CREDITS.md
+      - tools/**
+      - joint.node.test.mjs
+      - plugin.test.mjs
+      - package.json
+      - package-lock.json
+      - .github/workflows/archive.yml
   pull_request:
+    paths:
+      - manifest.json
+      - plugin.js
+      - README.md
+      - LICENSE.md
+      - CREDITS.md
+      - tools/**
+      - joint.node.test.mjs
+      - plugin.test.mjs
+      - package.json
+      - package-lock.json
+      - .github/workflows/archive.yml
+  schedule:
+    # Daily, off-peak. Catches upstream converter/art drift on a day this
+    # repository made no archive-relevant change of its own.
+    - cron: "17 5 * * *"
   workflow_dispatch:
 
 jobs:
