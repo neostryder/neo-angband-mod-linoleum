@@ -14,6 +14,12 @@ recorded, because the release exists for them.
 This file is not one of the archived root files, so editing it does not
 invalidate an archive.
 
+## 0.16.1
+
+Added a Terms of Use and a shared Code of Conduct alongside the existing
+LICENSE and AI usage policies, and a README screenshot of the extra
+Graphics-menu rows. Rebuilt `dist/neo-linoleum-mod.zip` to match.
+
 ## 0.16.0
 
 ### Added
