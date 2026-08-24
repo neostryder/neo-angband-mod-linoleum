@@ -1,51 +1,29 @@
 #!/usr/bin/env node
 /**
- * Convert the tilesheets in a Neo Angband checkout into this mod's six loose packs.
+ * Stage the compact source inputs for neo-linoleum's on-demand conversion.
  *
- * WHY THIS LIVES HERE AND NOT IN THE GAME. It used to be
- * packages/web/scripts/gen-linoleum-demo.mjs, run by the web package's `dev` and
- * `bundle` scripts, writing 9161 PNGs into the game's own public/mods/ directory.
- * That put a MOD's resources inside the game's build and served them from the
- * game's origin, which is exactly backwards: the packs are this mod's art, this
- * mod is what installs them, and the game should read them out of the installed
- * mod's folder. So the conversion moved to the mod, and the game's repository now
- * holds no pack bytes and no step that makes any.
+ * A player downloads one PNG atlas plus the legacy pref texts for a selected
+ * Graphics row. The host crops that source into loose PNGs on first enable and
+ * caches it locally; the loose output is deliberately not a shipped artefact.
  *
- * WHAT IT NEEDS. A Neo Angband checkout, BUILT (`pnpm build`), for two things:
- *   - the converter, @neo-angband/linoleum, imported from its dist;
- *   - the source art, packages/web/public/tiles/, which is upstream's own
- *     tilesheets and is core game data there, not mod content.
- * Defaults to a sibling checkout at ../neo-angband; override with --game.
+ * This still requires a built Neo Angband checkout. `ALL_PACKS` is the shared
+ * source-of-truth for image/pref names, so staging against the coupled host
+ * catches manifest drift before an archive reaches a player.
  *
- * Output goes to packs/ in this repository, which is GITIGNORED. The committed
- * deliverable is the archives under dist/ that tools/pack.mjs builds from these -
- * one zip per pack, which is what the game's installer fetches and verifies.
- * Committing 9161 loose binaries as well would be the same bytes twice, kept in
- * step by hope.
- *
- * ATTRIBUTION travels with the art: CREDITS.md at the repository root states the
- * source sets' terms and that a conversion is a modification of them, and it is
- * inside every archive. Nothing is written per-pack here, because unlike the old
- * generated-into-a-web-build arrangement these files never move without the mod.
- *
- *   node tools/build-packs.mjs [--game <dir>] [--packs a,b|all] [--force]
+ *   node tools/build-packs.mjs [--game <dir>] [--packs a,b|all]
  */
 
-import { existsSync, mkdirSync, readFileSync, rmSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-
 const args = process.argv.slice(2);
 const flag = (name, fallback) => {
   const at = args.indexOf(`--${name}`);
   return at >= 0 && args[at + 1] !== undefined ? args[at + 1] : fallback;
 };
-
 const gameRoot = resolve(flag("game", join(root, "..", "neo-angband")));
-const outputRoot = join(root, "packs");
-const force = args.includes("--force");
 
 function note(message) {
   console.log(`[build-packs] ${message}`);
@@ -60,103 +38,86 @@ const converterEntry = join(gameRoot, "packages", "linoleum", "dist", "index.js"
 if (!existsSync(converterEntry)) {
   fail(
     `no built converter at ${converterEntry}\n` +
-      `        Expected a Neo Angband checkout at ${gameRoot}, built with \`pnpm build\`.\n` +
-      `        Pass --game <dir> if it is somewhere else.`,
+      "        Build the coupled Neo Angband checkout first (pnpm build), then pass --game if needed.",
   );
 }
 const tilesRoot = join(gameRoot, "packages", "web", "public", "tiles");
-if (!existsSync(tilesRoot)) fail(`no source art at ${tilesRoot}`);
-
+if (!existsSync(tilesRoot)) fail(`no source art at ${tilesRoot}; run packages/web sync-tiles first`);
 const linoleum = await import(pathToFileURL(converterEntry).href);
+const known = new Map(linoleum.ALL_PACKS.map((pack) => [pack.key, pack]));
 
-/**
- * Why a built pack cannot be reused, or null when it can.
- *
- * Compares the stamp the converter writes into `maps/targets.txt` with the stamp the
- * converter just loaded writes now. A converter too old to export GENERATED_BY
- * cannot answer the question, so its packs are rebuilt rather than trusted - the
- * whole point here is not to trust bytes whose provenance is unknown.
- */
-function staleReason(packRoot) {
-  const marker = linoleum.GENERATED_BY;
-  if (typeof marker !== "string") {
-    return "this converter does not say what it stamps; rebuilding rather than guessing";
-  }
-  const targets = join(packRoot, "maps", "targets.txt");
-  if (!existsSync(targets)) return "no maps/targets.txt";
-  const first = readFileSync(targets, "utf8").split("\n", 1)[0].trim();
-  if (first === marker) return null;
-  return `built by ${first.replace(/^#\s*Generated by\s*/u, "") || "an unknown converter"}`;
-}
-
-/**
- * The packs to build: every path this mod's manifest declares, in its order.
- *
- * Driven by the MANIFEST rather than by the converter's own ALL_PACKS, because the
- * manifest is what the game reads. A pack the converter knows and the manifest
- * does not declare would be built and then never selectable; the mismatch is worth
- * failing on rather than shipping.
- */
 const manifest = JSON.parse(readFileSync(join(root, "manifest.json"), "utf8"));
-const declared = (Array.isArray(manifest.tilePacks) ? manifest.tilePacks : [])
-  .map((p) => p?.path)
-  .filter((p) => typeof p === "string" && p !== "");
-if (declared.length === 0) fail("manifest.json declares no tilePacks path");
+const declared = (Array.isArray(manifest.tilePacks) ? manifest.tilePacks : []).map((entry) => ({
+  path: entry?.path,
+  source: entry?.tilesheet,
+}));
+if (declared.length === 0) fail("manifest.json declares no tilePacks");
 
-const known = new Map(linoleum.ALL_PACKS.map((p) => [p.key, p]));
-const undeclarable = declared.filter((key) => !known.has(key));
-if (undeclarable.length > 0) {
-  fail(`manifest.json declares pack(s) the converter does not know: ${undeclarable.join(", ")}`);
-}
+const packs = declared.map(({ path, source }) => {
+  if (typeof path !== "string" || typeof source !== "object" || source === null) {
+    fail("each tilePacks entry needs a path and tilesheet source declaration");
+  }
+  const key = source.key;
+  const config = typeof key === "string" ? known.get(key) : undefined;
+  if (!config) fail(`manifest names an unknown converter pack: ${String(key)}`);
+  if (source.packId !== config.packId || source.resolution !== config.resolution) {
+    fail(`${key}: tilesheet packId/resolution does not match Neo Angband's converter`);
+  }
+  if (source.cacheKey !== manifest.version) {
+    fail(`${key}: tilesheet cacheKey must equal manifest version (${String(manifest.version)})`);
+  }
+  if (typeof source.image !== "string" || !Array.isArray(source.prefFiles)) {
+    fail(`${key}: tilesheet image and prefFiles are required`);
+  }
+  return { key, path, source, config };
+});
 
 const requested = flag("packs", "all");
-const keys =
-  requested === "all"
-    ? declared
-    : requested
-        .split(",")
-        .map((k) => k.trim())
-        .filter((k) => k !== "");
-for (const key of keys) {
-  if (!declared.includes(key)) fail(`--packs names "${key}", which manifest.json does not declare`);
+const wanted = requested === "all" ? packs.map((pack) => pack.key) : requested.split(",").map((key) => key.trim()).filter(Boolean);
+for (const key of wanted) if (!packs.some((pack) => pack.key === key)) fail(`--packs names "${key}", not a declared pack`);
+
+const groups = new Map();
+for (const pack of packs) {
+  let group = groups.get(pack.path);
+  if (!group) {
+    group = [];
+    groups.set(pack.path, group);
+  }
+  group.push(pack);
 }
 
-note(`converting ${keys.length} pack(s) from ${relative(root, tilesRoot) || tilesRoot}`);
-
-let built = 0;
-for (const key of keys) {
-  const config = known.get(key);
-  const packRoot = join(outputRoot, key);
-  if (existsSync(join(packRoot, "manifest.txt"))) {
-    /* STALE MEANS REBUILD, and the check is the converter's own stamp rather than
-     * the directory merely existing.
-     *
-     * This skip used to be existence alone, and it made a false green that cost a
-     * published tag. When the engine's packages were renamed to @rpgm-tools/*, the
-     * line the converter writes at the head of every generated map file changed with
-     * them - so every cached pack here was built by a converter that no longer
-     * exists, `tools/pack.mjs --verify` reported all six archives up to date against
-     * those cached bytes, and CI, which has no cache and converts from scratch,
-     * rebuilt six different archives. A cache whose key nobody checks reports on
-     * itself. */
-    const built = staleReason(packRoot);
-    if (built === null && !force) {
-      note(`already built: packs/${key} (--force to redo)`);
-      continue;
+let staged = 0;
+for (const [path, group] of groups) {
+  if (!group.some((pack) => wanted.includes(pack.key))) continue;
+  const files = new Map();
+  for (const pack of group) {
+    const sourceDir = join(tilesRoot, pack.config.sourceDirectory);
+    const pairs = [
+      [pack.config.imageFile, pack.source.image],
+      ...pack.config.prefFiles.map((name, index) => [name, pack.source.prefFiles[index]]),
+    ];
+    if (pairs.some(([, target]) => typeof target !== "string" || target === "")) {
+      fail(`${pack.key}: tilesheet prefFiles does not match the converter's source files`);
     }
-    if (built !== null) note(`rebuilding packs/${key}: ${built}`);
-    rmSync(packRoot, { recursive: true, force: true });
+    for (const [from, target] of pairs) {
+      const sourceFile = join(sourceDir, from);
+      const previous = files.get(target);
+      if (previous && previous !== sourceFile) fail(`${path}: two modes assign different source files to ${target}`);
+      files.set(target, sourceFile);
+    }
   }
-  const sourceDir = join(tilesRoot, config.sourceDirectory);
-  if (!existsSync(join(sourceDir, config.imageFile))) {
-    /* Never a soft skip. A missing pack is a Graphics row that silently draws
-     * ASCII, and this repository's whole job is to ship the art. */
-    fail(`${key}: source art missing (${join(sourceDir, config.imageFile)})`);
+  const packRoot = join(root, path);
+  rmSync(packRoot, { recursive: true, force: true });
+  let bytes = 0;
+  for (const [target, sourceFile] of files) {
+    if (!existsSync(sourceFile)) fail(`${path}: source art missing (${sourceFile})`);
+    const destination = join(packRoot, target);
+    mkdirSync(dirname(destination), { recursive: true });
+    copyFileSync(sourceFile, destination);
+    bytes += readFileSync(destination).length;
   }
-  mkdirSync(outputRoot, { recursive: true });
-  const result = linoleum.buildPackExport(config, tilesRoot, outputRoot);
-  note(`built ${result.displayName} -> packs/${key} (${result.exactSelectorCount} target rules)`);
-  built++;
+  note(`staged ${path}: ${files.size} source files, ${(bytes / 1024 / 1024).toFixed(2)} MiB`);
+  staged += 1;
 }
 
-note(`${built} built, ${keys.length - built} already present; next: node tools/pack.mjs`);
+note(`${staged} compact source archive(s) staged from ${relative(root, tilesRoot) || tilesRoot}; next: node tools/pack.mjs`);

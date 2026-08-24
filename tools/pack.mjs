@@ -4,22 +4,19 @@
  * ships.
  *
  * WHY ARCHIVES AND NOT 9161 COMMITTED FILES. A loose pack is one PNG per tile:
- * measured, the six packs are 9161 files and 42 MiB. The game's installer fetches an
- * `archive` payload, checks a digest, and unzips only after the digest matches
- * (packages/web/src/mod-install.ts). The alternative - a `files` payload - is one
- * HTTP request per file, and 9161 requests is not an install.
+ * the six pre-converted packs were 9161 files and 42 MiB. A player now downloads
+ * one source atlas plus its three pref texts per Graphics row, then the host crops
+ * and caches loose files on first enable.
  *
- * WHY SEVEN ARCHIVES AND NOT ONE. Measured: 42 MiB of loose art becomes 24.6 MiB of
- * zip, the largest pack 10.6 MiB. As ONE archive that is a 24.6 MiB blob rewritten in
- * full whenever a single tile changes, carrying one digest whose failure says only
- * "something in here is wrong". Per pack, a digest names which pack failed, a fix
- * rewrites one file, and the installer is free to offer a subset later. So: one
- * archive per tile pack, plus one small archive for the mod's own root files.
+ * WHY SEPARATE ARCHIVES AND NOT ONE. One compact source archive per selectable pack
+ * keeps a repair focused and lets a future installer offer a subset; the root archive
+ * owns the manifest/plugin files. Each art archive has four entries (five for the
+ * shared Shockbolt source), not thousands.
  *
  * WHY THE ROOT FILES GET THEIR OWN ARCHIVE. An installed mod's file list IS what its
  * archives contained, and the shared validator (readModDir) requires a top-level
  * manifest.json like every other source. Those files therefore have to be inside
- * SOMETHING - but inside all seven they would collide, and the installer rejects a
+ * SOMETHING - but inside all six they would collide, and the installer rejects a
  * path that arrives from two archives rather than silently keeping whichever unzipped
  * last. One archive owns them.
  *
@@ -27,9 +24,9 @@
  * function of CONTENT, so rebuilding on another machine produces the same bytes and
  * the same sha256 - which is what makes the digest the game ships worth pinning.
  *
- *   node tools/pack.mjs [--packs <dir>] [--verify] [--json]
+ *   node tools/pack.mjs [--sources <dir>] [--verify] [--json]
  *
- * `--packs` is the directory holding the built pack directories; default `packs/`,
+ * `--sources` is the directory holding compact source directories; default `sources/`,
  * which `tools/build-packs.mjs` writes and .gitignore excludes. `--json` prints
  * path/sha256 pairs in the shape the game's RECOMMENDED_MODS catalogue wants.
  */
@@ -71,8 +68,13 @@ const flag = (name, fallback) => {
 const verify = args.includes("--verify");
 const asJson = args.includes("--json");
 
-const packsRoot = resolve(flag("packs", join(root, "packs")));
+const sourcesRoot = resolve(flag("sources", join(root, "sources")));
 const distRoot = resolve(flag("dist", join(root, "dist")));
+
+/** `path` is mod-relative (`sources/foo`); --sources points at that first segment. */
+function sourceDirFor(path) {
+  return join(sourcesRoot, path.replace(/^sources[/\\]/u, ""));
+}
 
 function fail(message) {
   console.error(`[pack] ${message}`);
@@ -94,15 +96,17 @@ function note(message) {
 function declaredPacks() {
   const manifest = JSON.parse(readFileSync(join(root, "manifest.json"), "utf8"));
   const packs = Array.isArray(manifest.tilePacks) ? manifest.tilePacks : [];
-  const declared = packs.map((p) => p?.path).filter((p) => typeof p === "string" && p !== "");
-  if (declared.length === 0) fail("manifest.json declares no tilePacks path");
-  for (const path of declared) {
+  const declared = packs.map((p) => ({ path: p?.path, source: p?.tilesheet }));
+  if (declared.length === 0) fail("manifest.json declares no tilePacks");
+  for (const { path, source } of declared) {
+    if (typeof path !== "string" || path === "" || typeof source !== "object" || source === null) {
+      fail("each tilePacks entry must declare path and tilesheet source");
+    }
     if (/^([a-z]+:)?[/\\]/iu.test(path) || path.split(/[/\\]/u).includes("..")) {
       fail(`manifest.json tilePacks path "${path}" must be relative to the mod folder`);
     }
-    if (path.includes("/") || path.includes("\\")) {
-      fail(`manifest.json tilePacks path "${path}" must be a single directory name`);
-    }
+    if (typeof source.key !== "string" || source.key === "") fail(`manifest.json tilePacks path "${path}" has no tilesheet key`);
+    if (source.cacheKey !== manifest.version) fail(`${source.key}: tilesheet cacheKey must equal manifest version`);
   }
   return declared;
 }
@@ -218,18 +222,26 @@ function plan() {
   }
   jobs.push({ file: MOD_ARCHIVE, entries: rootEntries });
 
+  const groups = new Map();
+  for (const entry of declaredPacks()) {
+    const group = groups.get(entry.path) ?? [];
+    group.push(entry.source);
+    groups.set(entry.path, group);
+  }
   const missing = [];
-  for (const key of declaredPacks()) {
-    const packDir = join(packsRoot, key);
-    if (!existsSync(join(packDir, "manifest.txt"))) {
-      missing.push(key);
+  for (const [path, sources] of groups) {
+    const packDir = sourceDirFor(path);
+    const needed = sources.flatMap((source) => [source.image, ...(Array.isArray(source.prefFiles) ? source.prefFiles : [])]);
+    if (needed.length === 0 || needed.some((file) => typeof file !== "string" || !existsSync(join(packDir, file)))) {
+      missing.push(path);
       continue;
     }
     const entries = walk(packDir).map((rel) => [
-      `${key}/${rel}`,
+      `${path}/${rel}`,
       readFileSync(join(packDir, rel)),
     ]);
-    jobs.push({ file: `neo-linoleum-${key}.zip`, entries });
+    const name = path.split("/").at(-1);
+    jobs.push({ file: `neo-linoleum-${name}.zip`, entries });
   }
   /* EVERY declared pack, always. A declared pack with no archive is a Graphics row
    * that falls back to ASCII - the exact failure this mod exists to avoid - and it

@@ -1,13 +1,13 @@
 {
   "id": "neo-linoleum",
   "name": "neo-linoleum",
-  "version": "0.16.1",
+  "version": "0.17.0",
   "shape": "tiles",
   "facets": ["tiles", "plugin"],
   "modApi": 1,
   "affectsGameplay": false,
   "capabilities": ["registry:tiles"],
-  "engine": ">=0.23.0",
+  "engine": ">=0.33.0",
   "rules": [
     {
       "flag": "linoleum.deriveTiles",
@@ -35,8 +35,7 @@
       "dist/neo-linoleum-adam-bolt.zip",
       "dist/neo-linoleum-gervais.zip",
       "dist/neo-linoleum-nomad.zip",
-      "dist/neo-linoleum-shockbolt-dark.zip",
-      "dist/neo-linoleum-shockbolt-light.zip"
+      "dist/neo-linoleum-shockbolt.zip"
     ]
   },
   "tilePacks": [
@@ -44,37 +43,97 @@
       "grafID": 101,
       "engine": "linoleum",
       "menuname": "Original Tiles (neo-linoleum)",
-      "path": "original-tiles"
+      "path": "sources/original-tiles",
+      "tilesheet": {
+        "key": "original-tiles",
+        "packId": "linoleum-original-tiles",
+        "displayName": "Original Tiles (Linoleum)",
+        "cacheKey": "0.17.0",
+        "image": "source/8x8.png",
+        "prefFiles": ["source/graf-xxx.prf", "source/xtra-xxx.prf", "source/flvr-xxx.prf"],
+        "resolution": 8
+      }
     },
     {
       "grafID": 102,
       "engine": "linoleum",
       "menuname": "Adam Bolt's tiles (neo-linoleum)",
-      "path": "adam-bolt"
+      "path": "sources/adam-bolt",
+      "tilesheet": {
+        "key": "adam-bolt",
+        "packId": "linoleum-adam-bolt",
+        "displayName": "Adam Bolt's tiles (Linoleum)",
+        "cacheKey": "0.17.0",
+        "image": "source/16x16.png",
+        "prefFiles": ["source/graf-new.prf", "source/xtra-new.prf", "source/flvr-new.prf"],
+        "resolution": 16
+      }
     },
     {
       "grafID": 103,
       "engine": "linoleum",
       "menuname": "David Gervais' tiles (neo-linoleum)",
-      "path": "gervais"
+      "path": "sources/gervais",
+      "tilesheet": {
+        "key": "gervais",
+        "packId": "linoleum-gervais",
+        "displayName": "David Gervais' tiles (Linoleum)",
+        "cacheKey": "0.17.0",
+        "image": "source/32x32.png",
+        "prefFiles": ["source/graf-dvg.prf", "source/xtra-dvg.prf", "source/flvr-dvg.prf"],
+        "resolution": 32
+      }
     },
     {
       "grafID": 104,
       "engine": "linoleum",
       "menuname": "Nomad's tiles (neo-linoleum)",
-      "path": "nomad"
+      "path": "sources/nomad",
+      "tilesheet": {
+        "key": "nomad",
+        "packId": "linoleum-nomad",
+        "displayName": "Nomad's tiles (Linoleum)",
+        "cacheKey": "0.17.0",
+        "image": "source/8x16.png",
+        "prefFiles": ["source/graf-nmd.prf", "source/xtra-nmd.prf", "source/flvr-nmd.prf"],
+        "resolution": 16,
+        "tileWidth": 8,
+        "tileHeight": 16
+      }
     },
     {
       "grafID": 105,
       "engine": "linoleum",
       "menuname": "Shockbolt Dark (neo-linoleum)",
-      "path": "shockbolt-dark"
+      "path": "sources/shockbolt",
+      "tilesheet": {
+        "key": "shockbolt-dark",
+        "packId": "linoleum-shockbolt-dark",
+        "displayName": "Shockbolt Dark (Linoleum)",
+        "cacheKey": "0.17.0",
+        "image": "source/64x64.png",
+        "prefFiles": ["source/graf-shb-dark.prf", "source/xtra-shb.prf", "source/flvr-shb.prf"],
+        "resolution": 64,
+        "overdrawRow": 27,
+        "overdrawMax": 31
+      }
     },
     {
       "grafID": 106,
       "engine": "linoleum",
       "menuname": "Shockbolt Light (neo-linoleum)",
-      "path": "shockbolt-light"
+      "path": "sources/shockbolt",
+      "tilesheet": {
+        "key": "shockbolt-light",
+        "packId": "linoleum-shockbolt-light",
+        "displayName": "Shockbolt Light (Linoleum)",
+        "cacheKey": "0.17.0",
+        "image": "source/64x64.png",
+        "prefFiles": ["source/graf-shb-light.prf", "source/xtra-shb.prf", "source/flvr-shb.prf"],
+        "resolution": 64,
+        "overdrawRow": 27,
+        "overdrawMax": 31
+      }
     }
   ],
   "repository": "https://github.com/neostryder/neo-angband-mod-linoleum"

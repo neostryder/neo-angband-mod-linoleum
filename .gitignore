@@ -1,12 +1,11 @@
-# The converted loose packs, as `tools/build-packs.mjs` writes them: 9161 files
-# and 42 MiB across six tile sets.
+# The compact source packs, staged from the coupled host checkout before packing.
 #
 # NOT committed, because the committed deliverable is the archives under dist/ -
 # one zip per pack, which is the shape the game's installer fetches and verifies.
 # Committing the loose files as well would be the same bytes twice, kept in step
 # by hope. `node tools/pack.mjs --verify` is what proves the archives match a
 # fresh conversion, and CI runs it on every push.
-packs/
+sources/
 .claude/
 node_modules/
 package-lock.json
