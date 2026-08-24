@@ -7,7 +7,7 @@
   "modApi": 1,
   "affectsGameplay": false,
   "capabilities": ["registry:tiles"],
-  "engine": ">=0.33.0",
+  "engine": ">=0.34.0",
   "rules": [
     {
       "flag": "linoleum.deriveTiles",
