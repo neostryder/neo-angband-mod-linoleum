@@ -14,6 +14,15 @@ recorded, because the release exists for them.
 This file is not one of the archived root files, so editing it does not
 invalidate an archive.
 
+## Unreleased
+
+## 1.0.0 - 2026-08-26
+
+### Changed
+
+- `manifest.json`'s version and engine floor move to 1.0.0, matching the
+  host game's own public release.
+
 ## 0.17.0
 
 ### Changed
