@@ -1,8 +1,8 @@
-# Terms of Use for neo-linoleum
+# Terms of Use for Linoleum
 
 Effective date: 2026-08-23.
 
-neo-linoleum is an optional Neo Angband tile-rendering mod and loose tile-pack format, not a separate hosted service. It can add alternate graphics rows and render provided or player-created loose tile packs. It is disabled until enabled, and disabling it leaves the base game's graphics unchanged.
+Linoleum is an optional Neo Angband tile-rendering mod and loose tile-pack format, not a separate hosted service. It can add alternate graphics rows and render provided or player-created loose tile packs. It is disabled until enabled, and disabling it leaves the base game's graphics unchanged.
 
 The mod's code and format licence does not automatically license tile art. Art retains its own licence and attribution requirements. A player or distributor is responsible for confirming that a source tile set permits conversion, modification, copying, and redistribution before building or sharing a pack. The converted Shockbolt packs are supplied under permission specific to Neo Angband and its stated conditions. That permission is not a general right for another project, fork, extracted pack, or unrelated redistribution. `CREDITS.md` and `LICENSE.md` identify the relevant distinction.
 

@@ -1,6 +1,6 @@
 {
   "id": "neo-linoleum",
-  "name": "neo-linoleum",
+  "name": "Linoleum",
   "version": "0.17.0",
   "shape": "tiles",
   "facets": ["tiles", "plugin"],
@@ -42,7 +42,7 @@
     {
       "grafID": 101,
       "engine": "linoleum",
-      "menuname": "Original Tiles (neo-linoleum)",
+      "menuname": "Original Tiles (Linoleum)",
       "path": "sources/original-tiles",
       "tilesheet": {
         "key": "original-tiles",
@@ -57,7 +57,7 @@
     {
       "grafID": 102,
       "engine": "linoleum",
-      "menuname": "Adam Bolt's tiles (neo-linoleum)",
+      "menuname": "Adam Bolt's tiles (Linoleum)",
       "path": "sources/adam-bolt",
       "tilesheet": {
         "key": "adam-bolt",
@@ -72,7 +72,7 @@
     {
       "grafID": 103,
       "engine": "linoleum",
-      "menuname": "David Gervais' tiles (neo-linoleum)",
+      "menuname": "David Gervais' tiles (Linoleum)",
       "path": "sources/gervais",
       "tilesheet": {
         "key": "gervais",
@@ -87,7 +87,7 @@
     {
       "grafID": 104,
       "engine": "linoleum",
-      "menuname": "Nomad's tiles (neo-linoleum)",
+      "menuname": "Nomad's tiles (Linoleum)",
       "path": "sources/nomad",
       "tilesheet": {
         "key": "nomad",
@@ -104,7 +104,7 @@
     {
       "grafID": 105,
       "engine": "linoleum",
-      "menuname": "Shockbolt Dark (neo-linoleum)",
+      "menuname": "Shockbolt Dark (Linoleum)",
       "path": "sources/shockbolt",
       "tilesheet": {
         "key": "shockbolt-dark",
@@ -121,7 +121,7 @@
     {
       "grafID": 106,
       "engine": "linoleum",
-      "menuname": "Shockbolt Light (neo-linoleum)",
+      "menuname": "Shockbolt Light (Linoleum)",
       "path": "sources/shockbolt",
       "tilesheet": {
         "key": "shockbolt-light",

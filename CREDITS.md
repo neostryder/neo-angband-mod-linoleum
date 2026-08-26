@@ -2,7 +2,7 @@
 
 This mod is two separable things, and they are not under the same terms:
 
-- **The format, the engine and the converter**: neo-linoleum's own code and docs,
+- **The format, the engine and the converter**: Linoleum's own code and docs,
   under the same dual licence as Neo Angband and Angband. See [LICENSE.md](LICENSE.md).
 - **Tile art**: never this mod's to license. Each pack carries whatever licence the
   art in it carried.
@@ -18,7 +18,7 @@ all of that art the game's own repository holds.
 A **loose pack** is the same art in a different form: one PNG per tile, cut out of
 that sheet. The game now produces it locally when a player first selects a row; that is
 still a second, separate use of the art, and it belongs to this mod. Nothing in the game
-cuts up a tilesheet unless neo-linoleum is installed. So the attribution for the
+cuts up a tilesheet unless Linoleum is installed. So the attribution for the
 converted form lives here, and this file is inside every archive, so it arrives with the
 art wherever the art goes.
 
@@ -37,7 +37,7 @@ All six selectable packs ship as compact source tilesheets in six archives under
 
 Measured: 26 archive entries and 18.7 MiB as zip. First enable produces the same loose
 art locally and caches it in the game. The five sets' terms differ from one another, so
-**do not read "shipped with neo-linoleum" as one licence.** Angband 4.2.6's
+**do not read "shipped with Linoleum" as one licence.** Angband 4.2.6's
 `docs/copying.rst` is the authoritative statement for all five.
 
 The generated loose files are not committed; the source archives are.

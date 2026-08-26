@@ -27,7 +27,7 @@ What was already measured before this, and is still true:
   mirrors and repaints Carcharoth's own tile in that character's palette.
 
 What is now ALSO measured is the part a player sees: a level 2 Human Druid, under
-Adam Bolt's tiles (neo-linoleum), cast Fox Form and the map tile at the player's
+Adam Bolt's tiles (Linoleum), cast Fox Form and the map tile at the player's
 own square changed from the normal figure to a small quadruped rendered in the
 "wild" palette's dark forest greens - visibly mirrored, tracking the player through
 a move rather than sitting fixed as terrain, and distinct at a glance from both the

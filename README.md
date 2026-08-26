@@ -1,4 +1,4 @@
-# neo-linoleum
+# Linoleum
 
 A second tile engine for [Neo Angband](https://github.com/neostryder/neo-angband),
 and the loose-pack tile format it draws.
@@ -18,10 +18,10 @@ here is needed to see them, and nothing here replaces them.
 
 A different way to store a tile set, and an engine that draws it.
 
-![The Graphics screen with neo-linoleum enabled: six extra rows below core's own six](docs/img/linoleum-graphics-menu.jpg)
+![The Graphics screen with Linoleum enabled: six extra rows below core's own six](docs/img/linoleum-graphics-menu.jpg)
 
 Enabling the mod adds six rows to the Graphics screen, one per source tileset, each
-tagged `[neo-linoleum]` and drawn by this mod's own engine rather than the classic
+tagged `[linoleum]` and drawn by this mod's own engine rather than the classic
 one - visible proof that the two engines coexist rather than one replacing the other.
 
 A conventional tileset is one big image plus pixel coordinates: to change the orc you
@@ -80,7 +80,7 @@ It also does two things a fixed sheet cannot:
 Everything below used to be the game's own behaviour. It is this mod's now, which
 is why the whole mod asks for a newer game than it used to: the code that draws a
 modded creature is here, and the door it writes through arrived in 0.23.0. If your
-game is older, keep neo-linoleum 0.14.4 - the tile sets themselves are unchanged
+game is older, keep Linoleum 0.14.4 - the tile sets themselves are unchanged
 between the two.
 
 Why it moved: Neo Angband is a faithful port of Angband 4.2.6, and 4.2.6 has no
@@ -401,18 +401,20 @@ files.
 
 ## Status
 
-**0.17.0: complete and working, held below 1.0 on purpose, with one claim not yet
-made.** 0.15.0 is the first version to carry CODE - one `plugin.js` holding the kin
-rule the game handed over, with its own tests in this repository. 0.16.0 adds the
-shapechange rule to the same file.
+**0.17.0: complete and working, held below 1.0 on purpose.** 0.15.0 is the first
+version to carry CODE - one `plugin.js` holding the kin rule the game handed over,
+with its own tests in this repository. 0.16.0 adds the shapechange rule to the same
+file.
 
-**The shapechange rule has not been WATCHED rendering.** Its tier tables and
+**The shapechange rule has now been watched rendering.** Its tier tables and
 palettes are measured exactly, its monster names are checked against Angband's own
 monster list and its tiles against the shipped packs' target maps, and the whole
 path from the switch to an allocated tile is driven through the game's real door
-over real art. None of that is a pixel. Until somebody has seen a shapechanged
-character on screen, "it draws correctly" is a claim this repository does not make;
-see [PLANNED.md](PLANNED.md).
+over real art. On top of that, a level 2 Human Druid under Adam Bolt's tiles cast
+Fox Form and the map tile at the player's own square changed from the normal figure
+to a mirrored, repainted quadruped, tracking the player through a move. That was one
+form and one class palette under one pack; the broader two-forms-two-palettes survey,
+and the aesthetic judgements it requires, stays open. See [PLANNED.md](PLANNED.md).
 
 The engine, the
 format, the converter and all six packs are built and in use, and the chain has
