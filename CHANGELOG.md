@@ -25,6 +25,9 @@ invalidate an archive.
   installer's entry limit.
 - Shockbolt Dark and Light share their one upstream atlas in a single source
   archive, avoiding a duplicate 17 MiB PNG.
+- `manifest.json`'s engine floor moves to `>=0.34.0`, the version the on-demand
+  tilesheet conversion above needs; the shapechange rule's own floor (0.27.0)
+  was already inside it.
 
 ## 0.16.1
 

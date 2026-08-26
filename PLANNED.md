@@ -5,7 +5,9 @@ shipped; an intention recorded there reads to somebody else as a feature, and th
 go looking for it.
 
 An item leaves this file by landing, by being found not to apply, or by being found
-unreachable in Angband 4.2.6 - not by going quiet.
+unreachable in Angband 4.2.6 - not by going quiet. A landed item may stay briefly as
+a dated "Landed:" closure note, recording what was measured before pruning it -
+that is a visible close, not the quiet drift this rule is against.
 
 ## Landed: the shapechange rule has been watched rendering
 
@@ -56,11 +58,13 @@ neo-angband#10.
 
 ## Landed: the engine floor now names the version the shapechange rule needs
 
-`manifest.json`'s overall floor stays `>=0.23.0`, which is what the kin rule
+`manifest.json`'s overall floor stayed `>=0.23.0`, which is what the kin rule
 needs - the shapechange rule degrades cleanly on an older game rather than
 raising the floor for everybody. The README now names 0.27.0 as the release
 that first shipped the player-tile door, since that is the version this got
-tagged against.
+tagged against. (The floor has since moved to `>=0.34.0` in 0.17.0, for an
+unrelated reason - on-demand tilesheet conversion - not because this decision
+changed.)
 
 ## Not planned: more tiers for the fox and the eagle
 
