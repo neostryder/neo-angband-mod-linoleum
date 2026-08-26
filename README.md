@@ -82,8 +82,9 @@ is this mod's now, which is why the whole mod asks for a newer game than it
 used to: the code that draws a modded creature is here, and the door it
 writes through arrived in 0.23.0. If your game is older, keep Linoleum 0.14.4
 - the tile sets themselves are unchanged between the two. `manifest.json`'s
-actual floor is higher still (0.34.0), for an unrelated reason: the on-demand
-tilesheet conversion the source archives need.
+actual floor is higher still (1.0.0): every first-party mod's floor moves to
+the game's own version at 1.0.0, on top of the 0.34.0 the on-demand
+tilesheet conversion above already needed.
 
 Why it moved: Neo Angband is a faithful port of Angband 4.2.6, and 4.2.6 has no
 concept of a record a mod added, so it has no opinion about what one should look

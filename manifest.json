@@ -1,13 +1,13 @@
 {
   "id": "neo-linoleum",
   "name": "Linoleum",
-  "version": "0.17.0",
+  "version": "1.0.0",
   "shape": "tiles",
   "facets": ["tiles", "plugin"],
   "modApi": 1,
   "affectsGameplay": false,
   "capabilities": ["registry:tiles"],
-  "engine": ">=0.34.0",
+  "engine": ">=1.0.0",
   "rules": [
     {
       "flag": "linoleum.deriveTiles",
