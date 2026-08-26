@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Stage the compact source inputs for neo-linoleum's on-demand conversion.
+ * Stage the compact source inputs for Linoleum's on-demand conversion.
  *
  * A player downloads one PNG atlas plus the legacy pref texts for a selected
  * Graphics row. The host crops that source into loose PNGs on first enable and

@@ -1,5 +1,5 @@
 /**
- * neo-linoleum's tile policy: a picture for content the pack has never heard of,
+ * Linoleum's tile policy: a picture for content the pack has never heard of,
  * and a picture for a character who is currently a wolf.
  *
  * Two rules, one file, one capability (registry:tiles), and the same argument
