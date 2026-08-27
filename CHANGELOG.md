@@ -16,6 +16,13 @@ invalidate an archive.
 
 ## Unreleased
 
+### Fixed
+
+- The six tile packs' `cacheKey` values were left at `0.17.0` when 1.0.0
+  bumped `manifest.json`'s version and engine floor, so the shipped
+  `neo-linoleum-mod.zip` still reported version `0.17.0` and engine
+  `>=0.34.0` internally. Both now match the outer manifest.
+
 ## 1.0.0 - 2026-08-26
 
 ### Changed
