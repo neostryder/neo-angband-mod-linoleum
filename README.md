@@ -485,10 +485,10 @@ JOINT_OPTIONAL=1 npm test
 
 ## Releasing
 
-A tag matching `vX.Y.Z` is the release: there is no separate publish step. A
-minor or major bump posts an announcement to the RPGM Tools Discord's Neo
+A tag matching `vX.Y.Z` is the release: there is no separate publish step. Every
+tag, patch included, posts an announcement to the RPGM Tools Discord's Neo
 Angband announcements forum automatically, built from the matching
-[CHANGELOG.md](CHANGELOG.md) heading. A patch-only bump stays quiet by design.
+[CHANGELOG.md](CHANGELOG.md) heading.
 
 ## Questions, or something wrong
 
