@@ -24,6 +24,9 @@ invalidate an archive.
   bumped `manifest.json`'s version and engine floor, so the shipped
   `neo-linoleum-mod.zip` still reported version `0.17.0` and engine
   `>=0.34.0` internally. Both now match the outer manifest.
+- README's Releasing section wrongly claimed a patch-only bump stays quiet.
+  Every tag posts a Discord announcement regardless of version-bump size,
+  which is what the announcement workflow has always done.
 
 ## 1.0.0 - 2026-08-26
 
