@@ -16,6 +16,8 @@ invalidate an archive.
 
 ## Unreleased
 
+## 1.0.1 - 2026-08-27
+
 ### Fixed
 
 - The six tile packs' `cacheKey` values were left at `0.17.0` when 1.0.0
