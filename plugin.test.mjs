@@ -294,7 +294,7 @@ describe("register", () => {
     return { fillers, providers, tiles };
   }
   function ctx(over = {}) {
-    return { id: "neo-linoleum", log: () => undefined, registries, flags: {}, ...over };
+    return { id: "linoleum", log: () => undefined, registries, flags: {}, ...over };
   }
 
   it("registers one filler, which fills a linoleum pack", () => {
@@ -766,7 +766,7 @@ describe("the shapechange rule, through register", () => {
   const state = { actor: { player: { cls: { name: "Druid" }, race: { name: "Elf" } } } };
   function ctx(over = {}) {
     return {
-      id: "neo-linoleum",
+      id: "linoleum",
       log: () => undefined,
       registries,
       state,

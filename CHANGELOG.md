@@ -16,6 +16,21 @@ invalidate an archive.
 
 ## Unreleased
 
+## 1.1.0 - 2026-08-28
+
+### Changed
+
+- **The manifest id is `linoleum`, not `neo-linoleum`.** The "neo-" prefix
+  existed only because the id used to leak into what a player saw before the
+  game's own display-name handling was fixed; once that no longer happens,
+  the plain id is what this mod was always meant to be called. An existing
+  install migrates automatically - the game's rename map carries the enabled
+  choice, any rule choices, and load-order entries across under the new id,
+  the same mechanism that handled this mod's *previous* rename in the other
+  direction. Nothing else changes: the six tile-pack archives keep their
+  `neo-linoleum-*.zip` names, since a shipped filename is not the same
+  question as the id a player's save records.
+
 ## 1.0.1 - 2026-08-27
 
 ### Fixed
