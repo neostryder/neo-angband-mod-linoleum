@@ -48,7 +48,7 @@ on:
       - joint.node.test.mjs
       - plugin.test.mjs
       - package.json
-      - package-lock.json
+      - pnpm-lock.yaml
       - .github/workflows/archive.yml
   pull_request:
     paths:
@@ -61,7 +61,7 @@ on:
       - joint.node.test.mjs
       - plugin.test.mjs
       - package.json
-      - package-lock.json
+      - pnpm-lock.yaml
       - .github/workflows/archive.yml
   schedule:
     # Daily, off-peak. Catches upstream converter/art drift on a day this
@@ -128,8 +128,9 @@ jobs:
       - name: Test the plugin
         working-directory: mod
         run: |
-          npm install --no-audit --no-fund
-          npm test
+          corepack enable
+          pnpm install --frozen-lockfile
+          pnpm test
 
       - name: Verify the committed archives are current
         working-directory: mod

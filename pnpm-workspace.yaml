@@ -1,0 +1,13 @@
+# pnpm 11 defaults minimumReleaseAge to 1440 minutes, so a package published in
+# the last day will not resolve - it silently falls back to whatever older
+# version IS old enough, which is worse than an error: a fresh install of
+# this repository would otherwise silently pin @rpgm-tools/neo-angband-core
+# and -mod-sdk at an older release instead of the ^1.0.0 range's actual
+# latest. neo-angband/pnpm-workspace.yaml already named this exact risk
+# before any mod repository ran pnpm, and it is real - mod-forge and
+# mod-bug-fixes both hit it during their own migrations. These are
+# first-party packages this project's own release CI gates before they
+# reach npm, so excluding them is the documented alternative to disabling
+# the protection outright.
+minimumReleaseAgeExclude:
+  - "@rpgm-tools/*"
