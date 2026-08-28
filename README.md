@@ -464,7 +464,7 @@ Since 0.15.0 there is code here as well, so there is one command to run before
 pushing:
 
 ```sh
-npm install && npm run verify
+pnpm install --frozen-lockfile && pnpm verify
 ```
 
 That runs the plugin's tests and then checks the committed archives under `dist/`
@@ -480,7 +480,7 @@ the same layout CI uses) and **fails** without it rather than skipping quietly. 
 you have only this repository:
 
 ```sh
-JOINT_OPTIONAL=1 npm test
+JOINT_OPTIONAL=1 pnpm test
 ```
 
 ## Releasing

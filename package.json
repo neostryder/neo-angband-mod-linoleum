@@ -7,6 +7,7 @@
   "author": "neostryder (RPGM Tools)",
   "homepage": "https://github.com/neostryder/neo-angband-mod-linoleum",
   "type": "module",
+  "packageManager": "pnpm@11.20.0",
   "//private": [
     "Not published to npm, and not intended to be. A mod is distributed as a FOLDER the",
     "game fetches - manifest.json plus plugin.js plus its archives, at a tag, verified",
@@ -24,7 +25,7 @@
     "test": "vitest run",
     "packs": "node tools/build-packs.mjs",
     "archives": "node tools/pack.mjs",
-    "verify": "npm run test && node tools/pack.mjs --verify"
+    "verify": "pnpm test && node tools/pack.mjs --verify"
   },
   "devDependencies": {
     "@rpgm-tools/neo-angband-core": "^1.0.0",
