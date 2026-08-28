@@ -74,17 +74,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out the mod
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           path: mod
 
       - name: Check out Neo Angband (for the converter and the source art)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: neostryder/neo-angband
           path: neo-angband
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
 
