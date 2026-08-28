@@ -169,8 +169,8 @@ describe("the real plugin against the real door", () => {
     const problems = [];
     const logs = [];
     const registry = new TileFillerRegistry((owner, why) => problems.push(`${owner}: ${why}`));
-    plugin.register({ tiles: registry.forOwner("neo-linoleum") }, {
-      id: "neo-linoleum",
+    plugin.register({ tiles: registry.forOwner("linoleum") }, {
+      id: "linoleum",
       flags: {},
       log: (m) => logs.push(m),
       registries: { monsters, objects },
@@ -226,7 +226,7 @@ describe("the real plugin against the real door", () => {
     const shapeAlloc = lino.derivedSlots(
       Array.from({ length: slots }, (_, i) => ({ kind: "asset", asset: `slot-${i}` })),
     );
-    const door = shapeRegistry.forOwner("neo-linoleum");
+    const door = shapeRegistry.forOwner("linoleum");
     plugin.register(
       {
         tiles: {
@@ -238,7 +238,7 @@ describe("the real plugin against the real door", () => {
         },
       },
       {
-        id: "neo-linoleum",
+        id: "linoleum",
         flags: { "linoleum.deriveTiles": false, "linoleum.shapeTiles": true },
         log: (m) => shapeLogs.push(m),
         registries: { monsters, objects },
@@ -395,7 +395,7 @@ describe("the shape tiers against real Angband data", () => {
      * that linoleum-cache.ts uses before Canvas crops those source bytes in the
      * browser. */
     const linoleum = await import(pathToFileURL(CONVERTER).href);
-    const outputRoot = mkdtempSync(join(tmpdir(), "neo-linoleum-shape-tiers-"));
+    const outputRoot = mkdtempSync(join(tmpdir(), "linoleum-shape-tiers-"));
     const coverage = new Map();
     try {
       for (const declaredPack of declared) {
