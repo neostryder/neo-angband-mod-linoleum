@@ -56,20 +56,20 @@ You edit one file at a time, and the map says what it is for in words.
 
 It also does two things a fixed sheet cannot:
 
-- **Variant pools.** One symbol, creature or item can draw from several tiles instead
+- Variant pools. One symbol, creature or item can draw from several tiles instead
   of always the same one. Which tile a given square gets is chosen by map position, so
   it is identical on every replay of a seed: variety without breaking determinism.
-- **Families.** Shared effect metadata across a group of tiles, declared once.
-- **Double-height tiles, declared by name.** A tile listed in `maps/tall.txt` is two
+- Families. Shared effect metadata across a group of tiles, declared once.
+- Double-height tiles, declared by name. A tile listed in `maps/tall.txt` is two
   cells tall and is drawn over the cell above the one it stands in, which is how Shockbolt
   draws its larger monsters. A conventional sheet can only do this by reserving a
   band of rows in the image and telling the game which rows those are; here any tile
   can be tall, in a set with no sheet behind it at all.
-- **A tile for a creature the pack has never heard of.** A mod's own monsters and
+- A tile for a creature the pack has never heard of. A mod's own monsters and
   items get a picture under these packs even though no pack was built with them in
   mind, and a picture of their own rather than a duplicate of a relative's. This
   mod supplies that; the game does not. See below.
-- **A picture for a shapechanged character.** A Druid in bear form is drawn as a
+- A picture for a shapechanged character. A Druid in bear form is drawn as a
   bear rather than as the usual figure, mirrored and repainted in colours picked
   from the character's class and race, with the creature getting more impressive as
   the character levels. Off by default. See below.
@@ -107,22 +107,22 @@ somebody's tile and there is no spare cell to put a variant in, so the best that
 could be done there is an exact duplicate of another creature, and that is not a
 call this mod's art gets to make.
 
-What that means in practice:
+In practice:
 
-- **Your added creature looks related to its family, and not identical to it.**
-- **Several of them differ from each other too.** Colours are handed out per family,
+- Your added creature looks related to its family, and not identical to it.
+- Several of them differ from each other too. Colours are handed out per family,
   cycling through eight around the wheel, so the first eight creatures added to one
   family are all distinguishable.
-- **The same mods always give the same colours.** Nothing here touches the game's
+- The same mods always give the same colours. Nothing here touches the game's
   randomness, the clock or your save.
-- **Nothing you did not add is changed.** Only records a mod ADDED are given a tile
+- Nothing you did not add is changed. Only records a mod ADDED are given a tile
   this way, so an unmodded game draws exactly what it always drew, and a pack with
   no mods installed produces none of these at all. The game enforces the other
   half of that itself: this mod is handed a door that refuses any tile the pack or
   a pref file already assigned, so it cannot repaint your tile set even by mistake.
-- **You can still choose the tile yourself.** Name an asset for your monster in a
+- You can still choose the tile yourself. Name an asset for your monster in a
   pref file and that wins outright.
-- **You can turn it off.** "Draw modded content from its kin", in this mod's
+- You can turn it off. "Draw modded content from its kin", in this mod's
   options, on by default. Off, modded content keeps its letter.
 
 **If you write mods: draw your own tiles.** This is a fallback for the mods that
@@ -188,7 +188,7 @@ impressive it looks at 32 pixels.
 
 ### Three short lists, and why they stay short
 
-**fox: two tiers.** There is no fox in Angband 4.2.6, and no vulpine monster base
+Fox has two tiers. There is no fox in Angband 4.2.6, and no vulpine monster base
 either - `monster_base.txt` offers `canine`, `feline`, `rodent` and
 `zephyr hound`. The shape is small, swift and stealthy, so the small end of the
 canine base is the honest match, and `blink dog` is where it stops: every canine
@@ -197,13 +197,13 @@ draw. A third form borrowing them would make three shapes look like one. The
 zephyr hounds were considered and rejected - they are elemental constructs drawn
 as breath-weapon hounds, not small canines.
 
-**eagle: three tiers.** There is no eagle either. The bird base has exactly two
+Eagle has three tiers. There is no eagle either. The bird base has exactly two
 non-unique birds of prey, `blood falcon` and `giant roc`, plus `The Phoenix`. The
 crows (`crow`, `crow of Durthang`, `craban`) are deliberately left out: an eagle
 drawn as a crow at low level would be a smaller bird rather than a weaker one,
 which is the wrong axis. `winged horror` shares the base and is not a raptor.
 
-**Pukel-man: three tiers.** `pukelman` is the shape's own creature, and above it
+Pukel-man has three tiers. `pukelman` is the shape's own creature, and above it
 the progression stays with stone, because the shape is stone - it grants ROCK,
 shard resistance and damage reduction. `Eog golem` and `colossus` are the stone
 ones. The deeper golems are mithril, iron and bronze, which are metal, and
@@ -227,9 +227,9 @@ Six palettes by class, one highlight by race, five entries in total.
 | martial | Warrior | iron and steel |
 | shadow | Rogue | charcoal into muted teal |
 
-**A grouping rather than nine palettes**, because the palette has one job: say at
-a glance whose shape this is. Nine four-colour ramps would be nine a player
-cannot tell apart, and the classes that read alike do read alike - a Priest and a
+This is a grouping rather than nine palettes, because the palette has one job: say at
+a glance whose shape this is. Nine four-colour ramps would be hard for a player to
+tell apart, and the classes that read alike do read alike. A Priest and a
 Paladin are the same kind of character in the same kind of armour. The Druid and
 the Ranger get the earthy one because they are the two classes at home outdoors
 and the Druid casts every one of these forms, so it is the palette most players
@@ -245,7 +245,7 @@ of every class would look like the same creature. Each highlight is pale rather
 than saturated, because a saturated one there reads as a rim light on the figure
 rather than as part of it.
 
-**Five bands in total is the number most likely to want changing**, and it is a
+Five bands in total is the number most likely to need changing, and it is a
 judgement about tiles between 8 and 64 pixels wide with the 8-pixel end weighted:
 fewer reads flatter and more stylised, more preserves the creature's own shading.
 The engine takes up to sixteen.
@@ -255,15 +255,15 @@ The engine takes up to sixteen.
 Every one of these leaves the tile set's own player picture exactly as it is,
 which is what an unmodded game draws:
 
-- **The switch is off**, which is the default.
-- **Not shapechanged**, which is almost all of the time.
-- **The tile set is one of Angband's own sheets** rather than a linoleum pack. A
+- The switch is off, which is the default.
+- The character is not shapechanged, which is almost all of the time.
+- The tile set is one of Angband's own sheets rather than a linoleum pack. A
   fixed sheet is one image cut into a grid with no spare cell to put a variant in,
   so there is nothing to allocate.
-- **The game has no player-tile seam.** This needs a door the game first shipped
+- The game has no player-tile seam. This needs a door the game first shipped
   in 0.27.0. On an older game the switch does nothing, everything else in this
   mod works unchanged, and the log says so once.
-- **A class or race this mod has no palette for**, which means one a content mod
+- The class or race has no palette in this mod, which means one a content mod
   added. Guessing that a modded class is "martial" would put a colour on somebody
   else's character with nothing behind the choice, so it declines instead.
 
@@ -279,8 +279,8 @@ band that quietly loses its art is a red build rather than a silent downgrade.
 ## Building a pack
 
 The converter turns a conventional tileset into a loose pack. It lives in the main
-repository and is **not published to a package registry**, because it is a workspace tool, so
-you run it from a clone rather than fetching it:
+repository and is **not published to a package registry**. It is a workspace tool,
+so you run it from a clone rather than fetching it:
 
 ```bash
 git clone https://github.com/neostryder/neo-angband.git
