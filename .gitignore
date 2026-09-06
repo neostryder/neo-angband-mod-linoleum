@@ -7,5 +7,6 @@
 # fresh conversion, and CI runs it on every push.
 sources/
 .claude/
+CLAUDE.md
 node_modules/
 package-lock.json
