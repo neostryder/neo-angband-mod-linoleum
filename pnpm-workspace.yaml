@@ -1,5 +1,5 @@
-# pnpm 11 defaults minimumReleaseAge to 1440 minutes, so a package published in
-# the last day will not resolve - it silently falls back to whatever older
+# pnpm applies a minimumReleaseAge delay by default, so a recently published
+# package will not resolve - it silently falls back to whatever older
 # version IS old enough, which is worse than an error: a fresh install of
 # this repository would otherwise silently pin @rpgm-tools/neo-angband-core
 # and -mod-sdk at an older release instead of the ^1.0.0 range's actual
