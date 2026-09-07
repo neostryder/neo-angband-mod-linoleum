@@ -76,6 +76,8 @@ It also does two things a fixed sheet cannot:
 
 ## Tiles for modded content
 
+See the [settings reference](SETTINGS.md) for every flag, its default, and when a change takes effect.
+
 **This mod needs Neo Angband 0.23.0 or newer for the rule below, and 0.15.0 is
 where that changed.** Everything below used to be the game's own behaviour. It
 is this mod's now, which is why the whole mod asks for a newer game than it
