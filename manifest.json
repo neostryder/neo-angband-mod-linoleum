@@ -13,13 +13,15 @@
       "flag": "linoleum.deriveTiles",
       "title": "Draw modded content from its kin",
       "description": "A creature or item a mod added, with no tile of its own, is drawn from its nearest relative with the colour turned. Off, it keeps its letter.",
-      "default": true
+      "default": true,
+      "requiresReload": true
     },
     {
       "flag": "linoleum.shapeTiles",
       "title": "Draw a shapechanged character as the creature",
       "description": "While a shapechange is running - a Druid's fox, bear, eagle, bat, warg, vampire, werewolf or Pukel-man - the map draws the closest real creature for that form instead of your usual figure, mirrored and repainted in colours picked from your class and race. Which creature depends on your level. Off by default, because it replaces a picture the tile set does supply.",
-      "default": false
+      "default": false,
+      "requiresReload": true
     }
   ],
   "author": "neostryder",
