@@ -26,6 +26,8 @@ were not retagged.
 
 ## [Unreleased]
 
+## 1.2.0 - 2026-09-11
+
 ### Fixed
 
 - [Visible] [Modding-API] **Toggling "Draw modded content from its kin" or "Draw a shapechanged character as the creature" mid-run now correctly prompts a reload instead of silently doing nothing** (neostryder/neo-angband#186).
