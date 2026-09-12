@@ -103,6 +103,8 @@ creature sharing its family, an added item from another item of its type. So a
 modded ant is a recognisable ant without its author naming a single pixel
 coordinate, and it is not the base game's ant either.
 
+Kin fill is the default for new mod-added content. An added object whose type-mates would be actively misleading can set `"linoleum:no-object-kin-fill": true` in its object record, which leaves it at its plain glyph until it has a tile of its own. The content mod must list `linoleum` as a dependency or optional dependency so its declared boolean field survives composition.
+
 **Under Angband's own tile sheets, it stays a letter**, and that is deliberate
 rather than a gap. Those sheets are one image cut into a fixed grid: every cell is
 somebody's tile and there is no spare cell to put a variant in, so the best that
@@ -124,6 +126,7 @@ In practice:
   a pref file already assigned, so it cannot repaint your tile set even by mistake.
 - You can still choose the tile yourself. Name an asset for your monster in a
   pref file and that wins outright.
+- An added item can opt out of kin fill with `"linoleum:no-object-kin-fill": true` when a related item's tile would be misleading. It then keeps its plain glyph.
 - You can turn it off. "Draw modded content from its kin", in this mod's
   options, on by default. Off, modded content keeps its letter.
 

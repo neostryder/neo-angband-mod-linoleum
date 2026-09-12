@@ -26,6 +26,10 @@ were not retagged.
 
 ## [Unreleased]
 
+### Added
+
+- [Visible] [Modding-API] **Mod-added items can opt out of Linoleum kin fill with `linoleum:no-object-kin-fill`.** An opted-out item falls back to its plain glyph until it has a tile of its own (#218).
+
 ## 1.2.0 - 2026-09-11
 
 ### Fixed

@@ -105,10 +105,10 @@ const MOD = { owner: "some-mod" };
 
 /** Races shaped the way the bound registry hands them over. */
 function races(...rows) {
-  return rows.map((r, i) => ({ ridx: i, name: r.name, base: { name: r.base }, ...(r.from ? { from: r.from } : {}) }));
+  return rows.map((r, i) => ({ ridx: i, name: r.name, base: { name: r.base }, ...(r.from ? { from: r.from } : {}), ...(r.ext ? { ext: r.ext } : {}) }));
 }
 function kinds(...rows) {
-  return rows.map((r, i) => ({ kidx: i, name: r.name, tval: r.tval, ...(r.from ? { from: r.from } : {}) }));
+  return rows.map((r, i) => ({ kidx: i, name: r.name, tval: r.tval, ...(r.from ? { from: r.from } : {}), ...(r.ext ? { ext: r.ext } : {}) }));
 }
 
 describe("addedByMod", () => {
@@ -156,6 +156,37 @@ describe("fillFromKin", () => {
     expect(d.objectTiles.has(1)).toBe(false);
     expect(d.objectTiles.has(2)).toBe(false);
     expect(d.derivedCount()).toBe(0);
+  });
+
+  it("leaves an opted-out item at its glyph while other items still borrow", () => {
+    const registries = {
+      monsters: { races: races() },
+      objects: {
+        kinds: kinds(
+          { name: "Flask of Oil", tval: 27 },
+          { name: "Misleading Implement", tval: 27, from: MOD, ext: { "linoleum:no-object-kin-fill": true } },
+          { name: "Mod Flask", tval: 27, from: MOD },
+        ),
+      },
+    };
+    const d = door({ object: { 0: { attr: 0x83, char: 0x84 } } });
+
+    expect(fillFromKin(d.fill, registries)).toEqual({ monsters: 0, objects: 1 });
+    expect(d.objectTiles.has(1)).toBe(false);
+    expect(d.objectTiles.get(2)).not.toEqual(d.objectTiles.get(0));
+    expect(d.derivedCount()).toBe(1);
+  });
+
+  it("leaves monster kin fill unchanged by an object opt-out", () => {
+    const registries = {
+      monsters: { races: races({ name: "giant ant", base: "ant" }, { name: "mod ant", base: "ant", from: MOD }) },
+      objects: { kinds: kinds({ name: "Flask of Oil", tval: 27 }, { name: "Misleading Implement", tval: 27, from: MOD, ext: { "linoleum:no-object-kin-fill": true } }) },
+    };
+    const d = door({ monster: { 0: { attr: 0x81, char: 0x82 } }, object: { 0: { attr: 0x83, char: 0x84 } } });
+
+    expect(fillFromKin(d.fill, registries)).toEqual({ monsters: 1, objects: 0 });
+    expect(d.monsterTiles.get(1)).not.toEqual(d.monsterTiles.get(0));
+    expect(d.objectTiles.has(1)).toBe(false);
   });
 
   it("never asks for a tile something already assigned", () => {
@@ -355,6 +386,11 @@ describe("register", () => {
     );
     expect(manifest.capabilities).toContain("registry:tiles");
     expect(manifest.facets).toContain("plugin");
+    expect(manifest.fields).toContainEqual({
+      name: "no-object-kin-fill",
+      files: ["object"],
+      type: "boolean",
+    });
   });
 });
 

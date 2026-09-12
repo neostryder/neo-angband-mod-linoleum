@@ -19,6 +19,8 @@ switch has no flag of its own, the game knows it by its section id instead.
 | Draw modded content from its kin | `linoleum.deriveTiles` | on | A creature or item a mod added, with no tile of its own, is drawn from its nearest relative with the colour turned. |
 | Draw a shapechanged character as the creature | `linoleum.shapeTiles` | off | While a shapechange is running - a Druid's fox, bear, eagle, bat, warg, vampire, werewolf or Pukel-man - the map draws the closest real creature for that form instead of your usual figure, mirrored and repainted in colours picked from your class and race. |
 
+Kin fill is the default for new mod-added content. An added object can set `"linoleum:no-object-kin-fill": true` in its object record when a related item's tile would be actively misleading. It then falls back to its plain glyph until it has a tile of its own. The content mod must list `linoleum` as a dependency or optional dependency so the declared boolean field survives composition.
+
 ## What it needs
 
 - **Engine:** `>=1.0.0`
