@@ -56,6 +56,9 @@ export const HUES = [30, 60, 90, 135, 180, 225, 270, 315];
  */
 const BASE_PACK = "core";
 
+/** The object-record field that leaves one added item at its plain glyph. */
+const NO_OBJECT_KIN_FILL = "linoleum:no-object-kin-fill";
+
 /** Whether a record was ADDED by a mod, rather than being core's own. */
 export function addedByMod(rec) {
   return rec !== null && typeof rec === "object" && rec.from !== undefined && rec.from !== null && rec.from.owner !== BASE_PACK;
@@ -117,7 +120,7 @@ export function fillFromKin(fill, registries) {
     if (tile && !objectDonors.has(kind.tval)) objectDonors.set(kind.tval, tile);
   }
   for (const kind of kinds) {
-    if (!addedByMod(kind) || fill.objectTile(kind.kidx)) continue;
+    if (!addedByMod(kind) || kind.ext?.[NO_OBJECT_KIN_FILL] === true || fill.objectTile(kind.kidx)) continue;
     const donor = objectDonors.get(kind.tval);
     if (!donor) continue;
     if (fill.fillObject(kind.kidx, variantOf(donor))) objects += 1;

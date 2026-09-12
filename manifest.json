@@ -7,6 +7,13 @@
   "modApi": 1,
   "affectsGameplay": false,
   "capabilities": ["registry:tiles"],
+  "fields": [
+    {
+      "name": "no-object-kin-fill",
+      "files": ["object"],
+      "type": "boolean"
+    }
+  ],
   "engine": ">=1.0.0",
   "rules": [
     {
