@@ -1,0 +1,46 @@
+# Create the GitHub Release that documents each version tag.
+#
+# The mod is fetched as plain files, so this workflow publishes no build
+# artifact. Its release notes are the matching CHANGELOG.md section at the tag.
+name: GitHub release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Extract this version's changelog section
+        run: node .github/scripts/extract-changelog-section.mjs "$GITHUB_REF_NAME" "$RUNNER_TEMP/release-notes.md"
+
+      - name: Create the GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            echo "GitHub Release $GITHUB_REF_NAME already exists."
+            exit 0
+          fi
+
+          prerelease=()
+          if [[ "$GITHUB_REF_NAME" == v0.* ]]; then
+            prerelease+=(--prerelease)
+          fi
+
+          gh release create "$GITHUB_REF_NAME" \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "Neo Angband: Linoleum ${GITHUB_REF_NAME#v}" \
+            --notes-file "$RUNNER_TEMP/release-notes.md" \
+            --verify-tag \
+            "${prerelease[@]}"
