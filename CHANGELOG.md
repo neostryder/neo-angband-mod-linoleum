@@ -26,6 +26,10 @@ were not retagged.
 
 ## [Unreleased]
 
+### Fixed
+
+- [Visible] [UI] **Each converted pack's row on the Graphics screen no longer names Linoleum twice.** The row already carries a "[Linoleum]" tag showing which mod contributed it, so a pack's own name no longer repeats "(Linoleum)" a second time.
+
 ## 1.3.0 - 2026-09-12
 
 ### Added
