@@ -26,6 +26,10 @@ were not retagged.
 
 ## [Unreleased]
 
+### Changed
+
+- [Visible] [UI] **Setting descriptions read more plainly.** The two rule descriptions in the mod manager are rewritten for clarity; drawing is unchanged.
+
 ## 1.3.1 - 2026-09-14
 
 ### Fixed

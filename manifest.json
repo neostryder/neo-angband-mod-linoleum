@@ -19,21 +19,21 @@
     {
       "flag": "linoleum.deriveTiles",
       "title": "Draw modded content from its kin",
-      "description": "A creature or item a mod added, with no tile of its own, is drawn from its nearest relative with the colour turned. Off, it keeps its letter.",
+      "description": "A creature or item added by a mod that has no tile of its own is drawn with its nearest relative's tile, with the colour shifted. With this off, it shows as its letter.",
       "default": true,
       "requiresReload": true
     },
     {
       "flag": "linoleum.shapeTiles",
       "title": "Draw a shapechanged character as the creature",
-      "description": "While a shapechange is running - a Druid's fox, bear, eagle, bat, warg, vampire, werewolf or Pukel-man - the map draws the closest real creature for that form instead of your usual figure, mirrored and repainted in colours picked from your class and race. Which creature depends on your level. Off by default, because it replaces a picture the tile set does supply.",
+      "description": "During a shapechange (a Druid's fox, bear, eagle, bat, warg, vampire, werewolf or Pukel-man), the map draws the closest real creature for that form instead of your usual figure, mirrored and repainted in colours picked from your class and race. Which creature it draws depends on your level. Off by default, since it replaces a picture the tile set already supplies.",
       "default": false,
       "requiresReload": true
     }
   ],
   "author": "neostryder",
   "license": "GPL-2.0-only",
-  "description": "An alternative tile engine, and a much easier way to build a tile set: a folder of individual PNGs named after what they draw, instead of one sheet plus a table of pixel coordinates.\n\nEnabling it adds six rows to the Graphics screen - Angband's own tile sets, converted - so you can compare both engines on the same art. The game's own graphics are core content and are untouched if you turn this off.\n\nIt can also do what a fixed sheet cannot: one symbol drawing from a pool of variants, picked by map position so a seed still replays identically. Build your own pack with the converter in the main repository, or by hand - the format is plain text plus PNGs (docs/LINOLEUM.md).\n\nConverting somebody's tile set modifies their art. The Shockbolt packs ship under permission granted to Neo Angband specifically, conditional on this project not profiting, so check a set's licence before sharing a pack you built from it.",
+  "description": "An alternative tile engine that makes a tile set much easier to build: a folder of individual PNGs named after what they draw, instead of one sheet plus a table of pixel coordinates.\n\nEnabling it adds six rows to the Graphics screen with Angband's own tile sets converted to this format, so you can compare both engines on the same art. The game's own graphics are core content and stay untouched when this is off.\n\nUnlike a fixed sheet, it can have one symbol draw from a pool of variants, picked by map position so a seed still replays identically. Build your own pack with the converter in the main repository, or by hand; the format is plain text plus PNGs (docs/LINOLEUM.md).\n\nConverting somebody's tile set modifies their art. The Shockbolt packs ship under permission granted to Neo Angband specifically, on condition that this project does not profit, so check a set's licence before sharing a pack you built from it.",
   "dependencies": {
     "core": "*"
   },
