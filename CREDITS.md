@@ -33,17 +33,11 @@ All six selectable packs ship as compact source tilesheets in six archives under
 | `neo-linoleum-adam-bolt.zip` | 16x16 Adam Bolt atlas + prefs | redistributable and modifiable for any purpose |
 | `neo-linoleum-gervais.zip` | 32x32 David Gervais atlas + prefs | Creative Commons Attribution 3.0 |
 | `neo-linoleum-nomad.zip` | 8x16 Nomad atlas + prefs | GPL v2 or the Angband licence |
-| `neo-linoleum-shockbolt.zip` | shared 64x64 Shockbolt atlas + Dark/Light prefs | © Raymond "Shockbolt" Gaustadnes 2012, see below |
+| `neo-linoleum-shockbolt.zip` | shared 64x64 Shockbolt atlas + Dark/Light prefs | (C) Raymond "Shockbolt" Gaustadnes 2012, see below |
 
-Measured: 26 archive entries and 18.7 MiB as zip. First enable produces the same loose
-art locally and caches it in the game. The five sets' terms differ from one another, so
-**do not read "shipped with Linoleum" as one licence.** Angband 4.2.6's
-`docs/copying.rst` is the authoritative statement for all five.
+Together the archives hold 26 entries, 18.7 MiB as zip. The first time the mod is enabled, the game produces the same loose art locally and caches it. The five sets are under different terms, so being shipped with Linoleum does not put them under one licence. Angband 4.2.6's `docs/copying.rst` is the authoritative statement for all five.
 
-The generated loose files are not committed; the source archives are.
-`tools/build-packs.mjs` stages them from a Neo Angband checkout and
-`node tools/pack.mjs --verify` proves the committed archives match those sources. CI
-runs that on every push.
+The source archives are committed and the generated loose files are not. `tools/build-packs.mjs` stages the archives from a Neo Angband checkout, and `node tools/pack.mjs --verify`, which CI runs on every push, checks that the committed archives match those sources.
 
 ## The Shockbolt packs
 

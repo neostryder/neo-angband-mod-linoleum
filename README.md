@@ -78,24 +78,9 @@ It also does two things a fixed sheet cannot:
 
 See the [settings reference](SETTINGS.md) for every flag, its default, and when a change takes effect.
 
-**This mod needs Neo Angband 0.23.0 or newer for the rule below, and 0.15.0 is
-where that changed.** Everything below used to be the game's own behaviour. It
-is this mod's now, which is why the whole mod asks for a newer game than it
-used to: the code that draws a modded creature is here, and the door it
-writes through arrived in 0.23.0. If your game is older, keep Linoleum 0.14.4
-- the tile sets themselves are unchanged between the two. `manifest.json`'s
-actual floor is higher still (1.0.0): every first-party mod's floor moves to
-the game's own version at 1.0.0, on top of the 0.34.0 the on-demand
-tilesheet conversion above already needed.
+**The rule below needs Neo Angband 0.23.0 or newer, and Linoleum 0.15.0 is the version that brought it into this mod.** It used to be the game's own behaviour. The code that draws a modded creature now lives here, and the door it writes through arrived in the game in 0.23.0, which is why the whole mod asks for a newer game than it used to. On an older game, keep Linoleum 0.14.4; the tile sets are the same in both. The floor in `manifest.json` is higher still, at 1.0.0: every first-party mod's floor moves to the game's own version at 1.0.0, on top of the 0.34.0 that the on-demand tilesheet conversion above already needed.
 
-Why it moved: Neo Angband is a faithful port of Angband 4.2.6, and 4.2.6 has no
-concept of a record a mod added, so it has no opinion about what one should look
-like. "Take the picture of your nearest relative" is a judgement somebody made,
-and the port does not get to make judgements. It is also a judgement about
-somebody else's art - a tile set drawn in 2003 has no picture for content added
-twenty years later, and a sibling's picture there is a confident lie where a letter
-was the honest answer. A tile set deciding for its own art is on firmer ground, so
-that is where the rule lives now.
+The rule moved because Neo Angband is a faithful port of Angband 4.2.6, and 4.2.6 has no concept of a record added by a mod, so it has no view on what one should look like. Borrowing the nearest relative's picture is a design choice, and the port does not add design choices of its own. It is also a choice about somebody else's art: a tile set drawn in 2003 has no picture for content added twenty years later, and showing a sibling's picture there misleads where a plain letter would not. A tile set making that call for its own art is on firmer ground, so the rule lives here now.
 
 **Under this mod's packs**, a creature or item a mod added, with no tile of its own,
 is drawn from its nearest relative with the colour turned: an added monster from a
@@ -105,11 +90,7 @@ coordinate, and it is not the base game's ant either.
 
 Kin fill is the default for new mod-added content. An added object whose type-mates would be actively misleading can set `"linoleum:no-object-kin-fill": true` in its object record, which leaves it at its plain glyph until it has a tile of its own. The content mod must list `linoleum` as a dependency or optional dependency so its declared boolean field survives composition.
 
-**Under Angband's own tile sheets, it stays a letter**, and that is deliberate
-rather than a gap. Those sheets are one image cut into a fixed grid: every cell is
-somebody's tile and there is no spare cell to put a variant in, so the best that
-could be done there is an exact duplicate of another creature, and that is not a
-call this mod's art gets to make.
+**Under Angband's own tile sheets, it stays a letter.** Those sheets are one image cut into a fixed grid, and every cell already holds somebody's tile, so there is no spare cell for a variant. The most that could be done is an exact copy of another creature's tile, and that call is not this mod's to make.
 
 In practice:
 
@@ -135,12 +116,7 @@ do not, not a substitute for drawing an orc. If you ship a mod with no art, say 
 in its description and point your players here, so a letter in their dungeon is
 something they were told about rather than something that looks broken.
 
-One honest limit: turning a colour does nothing to a grey tile. If the family's tile
-is stone, iron or bone, the derived one comes back the same colour it went in. The
-alternative would be stamping a mark onto somebody else's art, which is a bigger lie
-than a similar colour, so the limit stays. Full detail is in
-[docs/LINOLEUM.md](https://github.com/neostryder/neo-angband/blob/master/docs/LINOLEUM.md)
-in the main repository.
+One limit: turning a colour does nothing to a grey tile. If the family's tile is stone, iron or bone, the derived tile comes back the same colour it went in. Stamping a mark onto somebody else's art would get around that, but it would misrepresent the art more than a similar colour does, so the limit stays. Full detail is in [docs/LINOLEUM.md](https://github.com/neostryder/neo-angband/blob/master/docs/LINOLEUM.md) in the main repository.
 
 ## A shapechanged character, drawn as the creature
 
@@ -168,10 +144,7 @@ only what colours it is drawn in.
 
 ### Which creature, at which level
 
-Higher level, more impressive version of the same family. Every name below is a
-real `monster.txt` entry, verified against Angband 4.2.6's own monster list and
-against these packs' target maps, because a name that is plausible and absent
-draws nothing and looks exactly like the switch being off.
+As the character levels, the form moves up to a more impressive member of the same family. Every name below is a real `monster.txt` entry, checked against Angband 4.2.6's monster list and against these packs' target maps, because a plausible name that does not exist draws nothing and looks just like the switch being off.
 
 | Form | Level 1 | then | then | then | then |
 | --- | --- | --- | --- | --- | --- |
@@ -184,36 +157,15 @@ draws nothing and looks exactly like the switch being off.
 | vampire | vampire | 12: master vampire | 23: vampire lord | 34: elder vampire | 50: Thuringwethil, the Vampire Messenger |
 | werewolf | werewolf | 17: werewolf of Sauron | 33: Draugluin, Sire of All Werewolves | 50: Carcharoth, the Jaws of Thirst | |
 
-A family whose most powerful real member is a **unique** reserves that picture for
-level 50, so it is what a finished character wears rather than a mid-game one; the
-bands below it are spread evenly. A family with no unique at the top spreads all
-its bands evenly. The numbers are authored rather than taken from each monster's
-own dungeon depth, because a monster's depth says where the game puts it, not how
-impressive it looks at 32 pixels.
+When a family's most powerful real member is a unique, that picture is kept for level 50, so a finished character wears it rather than a mid-game one, and the bands below it are spread evenly. A family with no unique at the top spreads all its bands evenly. The levels are chosen by hand rather than taken from each monster's dungeon depth, because depth says where the game places a monster, not how impressive it looks at 32 pixels.
 
 ### Three short lists, and why they stay short
 
-Fox has two tiers. There is no fox in Angband 4.2.6, and no vulpine monster base
-either - `monster_base.txt` offers `canine`, `feline`, `rodent` and
-`zephyr hound`. The shape is small, swift and stealthy, so the small end of the
-canine base is the honest match, and `blink dog` is where it stops: every canine
-above that is a wolf, and the wolves are what the warg and werewolf forms already
-draw. A third form borrowing them would make three shapes look like one. The
-zephyr hounds were considered and rejected - they are elemental constructs drawn
-as breath-weapon hounds, not small canines.
+Fox has two tiers. Angband 4.2.6 has no fox and no vulpine monster base; `monster_base.txt` offers `canine`, `feline`, `rodent` and `zephyr hound`. The fox shape is small, swift and stealthy, so the small end of the canine base is the closest match, and it stops at `blink dog` because every canine above that is a wolf. The warg and werewolf forms already draw the wolves, and a third form borrowing them would make three shapes look like one. The zephyr hounds are elemental constructs drawn as breath-weapon hounds rather than small canines, so they are left out.
 
-Eagle has three tiers. There is no eagle either. The bird base has exactly two
-non-unique birds of prey, `blood falcon` and `giant roc`, plus `The Phoenix`. The
-crows (`crow`, `crow of Durthang`, `craban`) are deliberately left out: an eagle
-drawn as a crow at low level would be a smaller bird rather than a weaker one,
-which is the wrong axis. `winged horror` shares the base and is not a raptor.
+Eagle has three tiers. There is no eagle either, and the bird base has only two non-unique birds of prey, `blood falcon` and `giant roc`, plus `The Phoenix`. The crows (`crow`, `crow of Durthang`, `craban`) are left out, because a low-level eagle drawn as a crow would read as a smaller bird rather than a weaker one. `winged horror` shares the base but is not a raptor.
 
-Pukel-man has three tiers. `pukelman` is the shape's own creature, and above it
-the progression stays with stone, because the shape is stone - it grants ROCK,
-shard resistance and damage reduction. `Eog golem` and `colossus` are the stone
-ones. The deeper golems are mithril, iron and bronze, which are metal, and
-`drolem`, which is a dragon construct: each exists, and each would be a different
-creature wearing the same word.
+Pukel-man has three tiers. `pukelman` is the shape's own creature, and above it the progression stays with the stone golems, `Eog golem` and `colossus`, because the shape is stone: it grants ROCK, shard resistance and damage reduction. The deeper golems are metal (mithril, iron and bronze), and `drolem` is a dragon construct, so each of those would be a different kind of creature that happens to share the word.
 
 The other five families are four or five deep with nothing borrowed. Where a
 family has more real members than tiers, the extras are named in `plugin.js` with
@@ -359,13 +311,7 @@ in its local IndexedDB cache. Switching to that row again reuses the cache.
 | `neo-linoleum-nomad.zip` | 4 | 0.05 MiB |
 | `neo-linoleum-shockbolt.zip` | 5 | 16.75 MiB |
 
-That is 26 archive entries and 18.7 MiB today. Shockbolt Dark and Light share the same
-atlas, so they deliberately share one five-file source archive; keeping two copies
-would make the compact form larger than the old loose-pack payload. The game's
-installer fetches each archive from a pinned tag, records the SHA-256 of the bytes that
-arrived, and unpacks them into the mod's own folder. The cache contains only derived
-files: reinstalling or updating the mod starts a fresh conversion namespace. Nothing
-about these packs lives in the game's repository.
+That is 26 archive entries and 18.7 MiB in total. Shockbolt Dark and Light use the same atlas, so they share one five-file source archive; two copies would make the compact form larger than the old loose-pack payload. The game's installer fetches each archive from a pinned tag, records the SHA-256 of the bytes that arrived, and unpacks them into the mod's own folder. The cache holds only derived files, and reinstalling or updating the mod starts a fresh conversion namespace. Nothing about these packs lives in the game's repository.
 
 You can also just use the folder: clone this repository into your mods directory, or
 point the browser build at it with **Load mod folder**. Unzip the source archives beside
@@ -381,73 +327,27 @@ texts. An `archive` payload is one HTTP request and one digest; the alternative,
 `files` payload, would be a request per input file and makes partial installs harder to
 diagnose.
 
-Not one archive either. Per source atlas, a digest names the source that failed and a
-fix rewrites only that archive. Shockbolt is one source atlas shared by two rows, so it
-is intentionally one archive rather than a duplicated pair.
+One archive per source atlas, rather than a single archive for everything, means a failed digest names the source that failed, and a fix rewrites only that archive. Shockbolt's one atlas serves two rows, so it gets one archive rather than a duplicated pair.
 
-The mod's five root files get their own archive because an installed mod's file list is
-whatever its archives contained, and the game's shared validator wants a top-level
-`manifest.json` from every source alike, so they have to be inside *something*, and
-inside all six they would collide (the installer rejects a path that arrives from two
-archives rather than silently keeping the last one). `tools/pack.mjs --verify` fails if
-any committed archive has drifted from freshly staged source art, and CI runs it on every
-push.
+The mod's five root files get an archive of their own. An installed mod's file list is whatever its archives contained, and the game's shared validator expects a top-level `manifest.json` from every source, so the root files have to be in some archive. Putting them in all six would make them collide, because the installer rejects a path that arrives from two archives instead of silently keeping the last one. `tools/pack.mjs --verify` fails if any committed archive has drifted from freshly staged source art, and CI runs it on every push.
 
-That last point has a consequence worth stating plainly, because it does not look like
-one: **this README is shipped content.** `manifest.json`, `plugin.js`, `README.md`,
-`LICENSE.md` and `CREDITS.md` are the five files inside `neo-linoleum-mod.zip`, so
-editing any of them (even a typo fix, even a link) changes that archive's digest and
-makes the committed copy stale. Re-run `node tools/pack.mjs` in the same commit. A
-documentation-only change here is still a build.
+This README is shipped content. `manifest.json`, `plugin.js`, `README.md`, `LICENSE.md` and `CREDITS.md` are the five files inside `neo-linoleum-mod.zip`, so editing any of them, even to fix a typo or a link, changes that archive's digest and leaves the committed copy stale. Re-run `node tools/pack.mjs` in the same commit, because a documentation-only change here is still a build.
 
-The zips are written deterministically, with entries sorted, timestamps fixed, stdlib
-`zlib` only, so a digest is a function of content and rebuilding anywhere gives the
-same bytes. Verified: two builds into different directories produced seven identical
-files.
+The zips are written deterministically (sorted entries, fixed timestamps, stdlib `zlib` only), so the digest depends only on content and a rebuild anywhere gives the same bytes. Two builds into different directories produced seven identical files.
 
 </details>
 
 ## Status
 
-**0.17.0: complete and working, held below 1.0 on purpose.** 0.15.0 is the first
-version to carry CODE - one `plugin.js` holding the kin rule the game handed over,
-with its own tests in this repository. 0.16.0 adds the shapechange rule to the same
-file.
+**0.17.0: complete and working, but not yet 1.0.** 0.15.0 was the first version to carry code: one `plugin.js` holding the kin rule that moved out of the game, with its own tests in this repository. 0.16.0 added the shapechange rule to the same file.
 
-**The shapechange rule has now been watched rendering.** Its tier tables and
-palettes are measured exactly, its monster names are checked against Angband's own
-monster list and its tiles against the shipped packs' target maps, and the whole
-path from the switch to an allocated tile is driven through the game's real door
-over real art. On top of that, a level 2 Human Druid under Adam Bolt's tiles cast
-Fox Form and the map tile at the player's own square changed from the normal figure
-to a mirrored, repainted quadruped, tracking the player through a move. That was one
-form and one class palette under one pack; the broader two-forms-two-palettes survey,
-and the aesthetic judgements it requires, stays open. See [PLANNED.md](PLANNED.md).
+The shapechange rule has been seen rendering in the game. Its tier tables and palettes are checked value by value, its monster names against Angband's own monster list and its tiles against the shipped packs' target maps, and the whole path from the switch to an allocated tile is driven through the game's real door over real art. In a live game, a level 2 Human Druid under Adam Bolt's tiles cast Fox Form, and the tile on the player's square changed from the normal figure to a mirrored, repainted quadruped that followed the player through a move. That covers one form and one class palette under one pack. The wider survey of two forms and two palettes, and the aesthetic calls it needs, is still open; see [PLANNED.md](PLANNED.md).
 
-The engine, the
-format, the converter and all six packs are built and in use, and the chain has
-been measured end to end rather than assumed: the converter's 1499 output PNGs are each
-pixel-identical to the cell of the source tilesheet that Angband's own `graf-*.prf`
-says they came from; enabling this mod adds its six Graphics rows and disabling it
-removes them and nothing else, leaving the game's own six untouched; and choosing one
-draws the map through the loose-pack engine, the same 1110 tiled cells as the tilesheet
-engine on the same view, agreeing on ~96% of map pixels, with the remainder on cell
-seams where the two engines round an 8-pixel source to a fractional destination height
-differently. `packages/web/src/linoleum-equivalence.test.ts` in the main repository
-holds the mechanical form of the first claim for **five** bundled packs, not just this
-one, Shockbolt included, which is what turned up a comparator that cropped 64x64 out
-of a double-height 64x128 tile.
+The engine, the format, the converter and all six packs are built and in use, and the chain has been checked end to end. Each of the converter's 1499 output PNGs is pixel-identical to the cell of the source tilesheet that Angband's own `graf-*.prf` says it came from. Enabling this mod adds its six Graphics rows, and disabling it removes them and nothing else, leaving the game's own six untouched. Choosing one of the rows draws the map through the loose-pack engine: on the same view it draws the same 1110 tiled cells as the tilesheet engine and matches about 96% of map pixels, with the rest on cell seams where the two engines round an 8-pixel source to a fractional destination height differently. `packages/web/src/linoleum-equivalence.test.ts` in the main repository runs the first of those checks automatically for five bundled packs, Shockbolt included, and that is how a comparator that cropped 64x64 out of a double-height 64x128 tile was found.
 
-What 1.0 is waiting on is exposure, not a known defect: this format has been driven by
-one author against five tilesets, and a version number is a promise about stability
-that a pack format should not make until someone else has authored a pack with it. If
-you build one and something in the format fights you, that is the feedback that moves
-this to 1.0. Until then treat `manifest.txt` and the map syntax as settled-in-practice
-but not frozen.
+No known defect is holding back 1.0. The format has been used by one author against five tilesets, and a 1.0 version promises a stability that a pack format should not claim until someone else has built a pack with it. If you build one and the format gets in your way, that feedback is what moves this to 1.0. Until then, treat `manifest.txt` and the map syntax as stable in practice but not frozen.
 
-Third-party tile sets are a licensing question per set, not a technical one: converting
-a sheet into a loose pack is a *modification* of the art, which not every tileset
-licence permits. Convert your own copies freely; check before you share.
+Third-party tile sets raise a licensing question for each set, since converting a sheet into a loose pack modifies the art and not every tileset licence permits that. Convert your own copies freely, and check the licence before you share one.
 
 ## Working on this repo
 
@@ -461,9 +361,7 @@ clone's hooks at it once:
 git config core.hooksPath /path/to/neo-angband/.githooks
 ```
 
-That is the gate that sees a **new** file before it is committed. The `privacy`
-workflow is the later one, because it reads tracked files, so by the time it can see a new
-file the bytes are already published. Both, not either.
+That hook is the check that sees a new file before it is committed. The `privacy` workflow runs later and reads tracked files, so by the time it can see a new file the bytes are already published. Use both.
 
 Since 0.15.0 there is code here as well, so there is one command to run before
 pushing:
