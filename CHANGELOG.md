@@ -29,6 +29,7 @@ were not retagged.
 ### Changed
 
 - [Visible] [UI] **Setting descriptions read more plainly.** The two rule descriptions in the mod manager are rewritten for clarity; drawing is unchanged.
+- [Visible] [Docs] **The README explains in plainer words why a creature stays a letter under Angband's own tile sheets, and why a grey tile cannot be recoloured.** The credits, terms and AI usage policy are reworded too.
 
 ## 1.3.1 - 2026-09-14
 
