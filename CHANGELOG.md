@@ -26,9 +26,11 @@ were not retagged.
 
 ## [Unreleased]
 
+## 1.4.0 - 2026-09-27
+
 ### Changed
 
-- [Visible] [Compatibility] **The tile packs ship JSON tile maps instead of pref files.** Each of the six modes carries a tile map generated from its original pref files, so every tile lands exactly where it did before. The packs need a version of the game that reads tile maps.
+- [Visible] [Compatibility] **The tile packs ship JSON tile maps instead of pref files.** Each of the six modes carries a tile map generated from its original pref files, so every tile lands exactly where it did before. The packs need Neo Angband 1.19.0 or later, the first version that reads tile maps.
 
 ## 1.3.2 - 2026-09-26
 

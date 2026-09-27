@@ -1,7 +1,7 @@
 {
   "id": "linoleum",
   "name": "Linoleum",
-  "version": "1.3.2",
+  "version": "1.4.0",
   "shape": "tiles",
   "facets": ["tiles", "plugin"],
   "modApi": 1,
@@ -14,7 +14,7 @@
       "type": "boolean"
     }
   ],
-  "engine": ">=1.0.0",
+  "engine": ">=1.19.0",
   "rules": [
     {
       "flag": "linoleum.deriveTiles",

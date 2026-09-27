@@ -23,7 +23,7 @@ Kin fill is the default for new mod-added content. An added object can set `"lin
 
 ## What it needs
 
-- **Engine:** `>=1.0.0`
+- **Engine:** `>=1.19.0`
 - **Shape:** `tiles`
 - **Facets:** `tiles`, `plugin`
 - **Capabilities:** `registry:tiles`
