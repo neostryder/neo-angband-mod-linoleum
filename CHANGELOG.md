@@ -26,6 +26,10 @@ were not retagged.
 
 ## [Unreleased]
 
+### Changed
+
+- [Visible] [Compatibility] **The tile packs ship JSON tile maps instead of pref files.** Each of the six modes carries a tile map generated from its original pref files, so every tile lands exactly where it did before. The packs need a version of the game that reads tile maps.
+
 ## 1.3.2 - 2026-09-26
 
 ### Changed

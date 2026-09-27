@@ -2,7 +2,7 @@
 /**
  * Stage the compact source inputs for Linoleum's on-demand conversion.
  *
- * A player downloads one PNG atlas plus the legacy pref texts for a selected
+ * A player downloads one PNG atlas plus a JSON tile map for a selected
  * Graphics row. The host crops that source into loose PNGs on first enable and
  * caches it locally; the loose output is deliberately not a shipped artefact.
  *
@@ -13,7 +13,7 @@
  *   node tools/build-packs.mjs [--game <dir>] [--packs a,b|all]
  */
 
-import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
@@ -44,6 +44,9 @@ if (!existsSync(converterEntry)) {
 const tilesRoot = join(gameRoot, "packages", "web", "public", "tiles");
 if (!existsSync(tilesRoot)) fail(`no source art at ${tilesRoot}; run packages/web sync-tiles first`);
 const linoleum = await import(pathToFileURL(converterEntry).href);
+const planEntry = join(gameRoot, "packages", "linoleum", "dist", "conversion-plan.js");
+if (!existsSync(planEntry)) fail(`no built conversion plan at ${planEntry}`);
+const { tileMapDocumentText } = await import(pathToFileURL(planEntry).href);
 const known = new Map(linoleum.ALL_PACKS.map((pack) => [pack.key, pack]));
 
 const manifest = JSON.parse(readFileSync(join(root, "manifest.json"), "utf8"));
@@ -66,8 +69,8 @@ const packs = declared.map(({ path, source }) => {
   if (source.cacheKey !== manifest.version) {
     fail(`${key}: tilesheet cacheKey must equal manifest version (${String(manifest.version)})`);
   }
-  if (typeof source.image !== "string" || !Array.isArray(source.prefFiles)) {
-    fail(`${key}: tilesheet image and prefFiles are required`);
+  if (typeof source.image !== "string" || typeof source.tileMap !== "string" || source.tileMap === "" || source.prefFiles !== undefined) {
+    fail(`${key}: tilesheet needs image and tileMap without prefFiles`);
   }
   return { key, path, source, config };
 });
@@ -90,33 +93,43 @@ let staged = 0;
 for (const [path, group] of groups) {
   if (!group.some((pack) => wanted.includes(pack.key))) continue;
   const files = new Map();
+  const maps = new Map();
   for (const pack of group) {
     const sourceDir = join(tilesRoot, pack.config.sourceDirectory);
-    const pairs = [
-      [pack.config.imageFile, pack.source.image],
-      ...pack.config.prefFiles.map((name, index) => [name, pack.source.prefFiles[index]]),
-    ];
-    if (pairs.some(([, target]) => typeof target !== "string" || target === "")) {
-      fail(`${pack.key}: tilesheet prefFiles does not match the converter's source files`);
-    }
+    const pairs = [[pack.config.imageFile, pack.source.image]];
     for (const [from, target] of pairs) {
       const sourceFile = join(sourceDir, from);
       const previous = files.get(target);
       if (previous && previous !== sourceFile) fail(`${path}: two modes assign different source files to ${target}`);
       files.set(target, sourceFile);
     }
+    const prefSources = pack.config.prefFiles.map((name) => {
+      const sourceFile = join(sourceDir, name);
+      if (!existsSync(sourceFile)) fail(`${pack.key}: source pref missing (${sourceFile})`);
+      return { name, lines: readFileSync(sourceFile, "utf8").split(/\r\n|\n|\r/u) };
+    });
+    if (maps.has(pack.source.tileMap)) fail(`${path}: duplicate tile map ${pack.source.tileMap}`);
+    maps.set(pack.source.tileMap, tileMapDocumentText(prefSources));
+  }
+  for (const sourceFile of files.values()) {
+    if (!existsSync(sourceFile)) fail(`${path}: source art missing (${sourceFile})`);
   }
   const packRoot = join(root, path);
   rmSync(packRoot, { recursive: true, force: true });
   let bytes = 0;
   for (const [target, sourceFile] of files) {
-    if (!existsSync(sourceFile)) fail(`${path}: source art missing (${sourceFile})`);
     const destination = join(packRoot, target);
     mkdirSync(dirname(destination), { recursive: true });
     copyFileSync(sourceFile, destination);
     bytes += readFileSync(destination).length;
   }
-  note(`staged ${path}: ${files.size} source files, ${(bytes / 1024 / 1024).toFixed(2)} MiB`);
+  for (const [target, body] of maps) {
+    const destination = join(packRoot, target);
+    mkdirSync(dirname(destination), { recursive: true });
+    writeFileSync(destination, body);
+    bytes += Buffer.byteLength(body);
+  }
+  note(`staged ${path}: ${files.size} atlas and ${maps.size} tile map(s), ${(bytes / 1024 / 1024).toFixed(2)} MiB`);
   staged += 1;
 }
 

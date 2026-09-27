@@ -5,12 +5,12 @@
  *
  * WHY ARCHIVES AND NOT 9161 COMMITTED FILES. A loose pack is one PNG per tile:
  * the six pre-converted packs were 9161 files and 42 MiB. A player now downloads
- * one source atlas plus its three pref texts per Graphics row, then the host crops
+ * one source atlas plus its JSON tile map per Graphics row, then the host crops
  * and caches loose files on first enable.
  *
  * WHY SEPARATE ARCHIVES AND NOT ONE. One compact source archive per selectable pack
  * keeps a repair focused and lets a future installer offer a subset; the root archive
- * owns the manifest/plugin files. Each art archive has four entries (five for the
+ * owns the manifest/plugin files. Each art archive has two entries (three for the
  * shared Shockbolt source), not thousands.
  *
  * WHY THE ROOT FILES GET THEIR OWN ARCHIVE. An installed mod's file list IS what its
@@ -37,8 +37,6 @@ import {
   existsSync,
   mkdirSync,
   readFileSync,
-  readdirSync,
-  statSync,
   writeFileSync,
 } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
@@ -107,18 +105,16 @@ function declaredPacks() {
     }
     if (typeof source.key !== "string" || source.key === "") fail(`manifest.json tilePacks path "${path}" has no tilesheet key`);
     if (source.cacheKey !== manifest.version) fail(`${source.key}: tilesheet cacheKey must equal manifest version`);
+    if (source.prefFiles !== undefined || typeof source.tileMap !== "string" || source.tileMap === "") {
+      fail(`${source.key}: tilesheet must declare tileMap without prefFiles`);
+    }
+    for (const file of [source.image, source.tileMap]) {
+      if (typeof file !== "string" || file === "" || /^([a-z]+:)?[/\\]/iu.test(file) || file.split(/[/\\]/u).includes("..")) {
+        fail(`${source.key}: tilesheet files must stay inside the pack`);
+      }
+    }
   }
   return declared;
-}
-
-/** Every file under `dir`, by path relative to it, sorted. */
-function walk(dir, prefix = "", out = []) {
-  for (const name of readdirSync(dir).sort()) {
-    const full = join(dir, name);
-    if (statSync(full).isDirectory()) walk(full, `${prefix}${name}/`, out);
-    else out.push(`${prefix}${name}`);
-  }
-  return out;
 }
 
 /* ------------------------------------------------------------------ *
@@ -231,12 +227,13 @@ function plan() {
   const missing = [];
   for (const [path, sources] of groups) {
     const packDir = sourceDirFor(path);
-    const needed = sources.flatMap((source) => [source.image, ...(Array.isArray(source.prefFiles) ? source.prefFiles : [])]);
+    const needed = [...new Set(sources.flatMap((source) => [source.image, source.tileMap]))];
     if (needed.length === 0 || needed.some((file) => typeof file !== "string" || !existsSync(join(packDir, file)))) {
       missing.push(path);
       continue;
     }
-    const entries = walk(packDir).map((rel) => [
+    /* Explicit entries keep stale pref files out of archives after restaging. */
+    const entries = needed.map((rel) => [
       `${path}/${rel}`,
       readFileSync(join(packDir, rel)),
     ]);

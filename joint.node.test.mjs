@@ -35,10 +35,40 @@ const CORE_PACK = join(GAME, "packages", "content", "pack");
 const TILES = join(GAME, "packages", "web", "public", "tiles");
 const TUTORIALS = join(GAME, "samples", "tutorials");
 const CONVERTER = join(GAME, "packages", "linoleum", "dist", "index.js");
+const CONVERSION_PLAN = join(GAME, "packages", "linoleum", "dist", "conversion-plan.js");
 
 const built = existsSync(join(GAME, "packages", "web", "src", "tile-registry.ts"));
 const art = existsSync(TILES) && readdirSync(TILES).length > 0;
 const optional = process.env["JOINT_OPTIONAL"] === "1";
+
+describe("shipped tile maps", () => {
+  it("matches the shared conversion plan for every declared mode", async () => {
+    if (!built || !art) return;
+    expect(existsSync(CONVERSION_PLAN), `needs built conversion plan at ${CONVERSION_PLAN}`).toBe(true);
+    const { tileMapDocumentText } = await import(pathToFileURL(CONVERSION_PLAN).href);
+    const { ALL_PACKS } = await import(pathToFileURL(CONVERTER).href);
+    const { parseDocument } = await import(join(GAME, "packages", "mod-sdk", "src", "json", "index.ts"));
+    const { linoleumTileMapFormat } = await import(join(GAME, "packages", "mod-sdk", "src", "json", "linoleum.ts"));
+    const declared = JSON.parse(readFileSync(join(HERE, "manifest.json"), "utf8")).tilePacks;
+    expect(declared).toHaveLength(6);
+    for (const pack of declared) {
+      const source = pack.tilesheet;
+      const config = ALL_PACKS.find((entry) => entry.key === source.key);
+      expect(config, `${source.key}: missing host config`).toBeDefined();
+      expect(source.prefFiles, `${source.key}: no runtime pref files`).toBeUndefined();
+      const prefSources = config.prefFiles.map((name) => ({
+        name,
+        lines: readFileSync(join(TILES, config.sourceDirectory, name), "utf8").split(/\r\n|\n|\r/u),
+      }));
+      const body = readFileSync(join(HERE, pack.path, source.tileMap), "utf8");
+      const parsed = parseDocument(body, linoleumTileMapFormat);
+      expect(parsed.ok, `${source.key}: invalid tile-map envelope`).toBe(true);
+      expect(JSON.parse(body), `${source.key}: mapping differs from source prefs`).toEqual(
+        JSON.parse(tileMapDocumentText(prefSources)),
+      );
+    }
+  });
+});
 
 describe("the real plugin against the real door", () => {
   it("has the game checkout it measures against", () => {
@@ -389,11 +419,8 @@ describe("the shape tiers against real Angband data", () => {
       throw new Error("manifest.json declares no tilesheet packs to measure");
     }
 
-    /* This is the host's Node encoder, not the retired mod build output. It
-     * reads the exact staged bytes a player downloads and writes a fresh loose
-     * tree, including every cropped PNG. Its maps come from the same shared plan
-     * that linoleum-cache.ts uses before Canvas crops those source bytes in the
-     * browser. */
+    /* The Node encoder and browser share the conversion plan. The shipped
+     * tile maps are checked separately against these same source prefs. */
     const linoleum = await import(pathToFileURL(CONVERTER).href);
     const outputRoot = mkdtempSync(join(tmpdir(), "linoleum-shape-tiers-"));
     const coverage = new Map();
@@ -408,59 +435,31 @@ describe("the shape tiers against real Angband data", () => {
           typeof source.packId !== "string" ||
           typeof source.displayName !== "string" ||
           typeof source.image !== "string" ||
-          !Array.isArray(source.prefFiles) ||
+          typeof source.tileMap !== "string" ||
           typeof source.resolution !== "number"
         ) {
           throw new Error("each manifest tilePacks entry needs a complete tilesheet source declaration");
         }
 
-        const sourceDir = dirname(source.image);
-        if (source.prefFiles.some((path) => typeof path !== "string" || dirname(path) !== sourceDir)) {
-          throw new Error(`${source.key}: tilesheet image and pref files must share one staged directory`);
-        }
-        const prefFiles = source.prefFiles.map((path) => basename(path));
-        if (prefFiles.length === 0) throw new Error(`${source.key}: tilesheet source declares no pref files`);
-
-        /* Match browserLinoleumConverter's PackConfig, but point its source
-         * directory at this mod's staged archive rather than the host's bundled
-         * tiles. No pre-converted pack is read or reused. */
-        const config = {
-          key: source.key,
-          packId: source.packId,
-          displayName: source.displayName,
-          sourceMode: source.key,
-          sourceDirectory: join(declaredPack.path, sourceDir),
-          imageFile: basename(source.image),
-          resolution: source.resolution,
-          ...(source.tileWidth === undefined ? {} : { tileWidth: source.tileWidth }),
-          ...(source.tileHeight === undefined ? {} : { tileHeight: source.tileHeight }),
-          ...(source.overdrawRow === undefined ? {} : { overdrawRow: source.overdrawRow }),
-          ...(source.overdrawMax === undefined ? {} : { overdrawMax: source.overdrawMax }),
-          primaryPref: prefFiles[0],
-          prefFiles,
-        };
-        const sourceRoot = join(HERE, config.sourceDirectory);
-        if (!existsSync(join(sourceRoot, config.imageFile))) {
+        const config = linoleum.ALL_PACKS.find((pack) => pack.key === source.key);
+        if (!config) throw new Error(`${source.key}: no host converter configuration`);
+        const sourceRoot = join(HERE, declaredPack.path, dirname(source.image));
+        if (!existsSync(join(sourceRoot, basename(source.image)))) {
           throw new Error(
             `${source.key}: needs staged source art at ${sourceRoot} (node tools/build-packs.mjs)`,
           );
         }
-        for (const prefFile of config.prefFiles) {
-          if (!existsSync(join(sourceRoot, prefFile))) {
-            throw new Error(`${source.key}: staged source is missing ${prefFile} under ${sourceRoot}`);
-          }
-        }
-        linoleum.buildPackExport(config, HERE, outputRoot);
+        linoleum.buildPackExport(config, TILES, outputRoot);
 
         /* Which monsters this freshly converted pack assigns an actual cropped
          * image to. The selector's casing comes from graf-*.prf rather than
          * monster.txt, hence the fold. */
-        const targets = join(outputRoot, config.key, "maps", "targets.txt");
+        const targets = JSON.parse(readFileSync(join(outputRoot, config.key, "pack.json"), "utf8")).data.targets;
         const drawn = new Set();
-        for (const line of readFileSync(targets, "utf8").split(/\r?\n/)) {
-          const m = /^target:monster:([^:]+):asset:([^:]+)$/u.exec(line);
-          if (m) {
-            const [, monster, asset] = m;
+        for (const target of targets) {
+          if (target.type === "monster" && target.kind === "asset") {
+            const monster = target.selector;
+            const asset = target.value;
             expect(
               existsSync(join(outputRoot, config.key, "images", String(config.resolution), `${asset}.png`)),
               `${config.key}/${monster} maps to a missing converted image`,

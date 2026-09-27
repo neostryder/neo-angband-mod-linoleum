@@ -39,8 +39,7 @@ my-pack/
   images/8/                 one PNG per tile, named for what it draws
     feat_granite_lit_0.png
     monster_cave_orc_0.png
-  graf-*.prf, xtra-*.prf,   the source tileset's own pref files, mirrored
-  flvr-*.prf                (present in a converted pack, optional in yours)
+  tile-map.json            parsed source selectors in the JSON tile-map format
 ```
 
 The `images/` subdirectory is the tile resolution in pixels: `images/8/` for an 8x8
@@ -100,13 +99,8 @@ In practice:
   family are all distinguishable.
 - The same mods always give the same colours. Nothing here touches the game's
   randomness, the clock or your save.
-- Nothing you did not add is changed. Only records a mod ADDED are given a tile
-  this way, so an unmodded game draws exactly what it always drew, and a pack with
-  no mods installed produces none of these at all. The game enforces the other
-  half of that itself: this mod is handed a door that refuses any tile the pack or
-  a pref file already assigned, so it cannot repaint your tile set even by mistake.
-- You can still choose the tile yourself. Name an asset for your monster in a
-  pref file and that wins outright.
+- Nothing you did not add is changed. Only records a mod ADDED are given a tile this way, so an unmodded game draws exactly what it always drew, and a pack with no mods installed produces none of these at all. Kin fill only ever gives a tile to something that has none. The game itself stops it from changing a tile your pack already sets, so turning it on leaves your tile set looking exactly as it did.
+- You can still choose the tile yourself. Name an asset for your monster in a target map and that wins outright.
 - An added item can opt out of kin fill with `"linoleum:no-object-kin-fill": true` when a related item's tile would be misleading. It then keeps its plain glyph.
 - You can turn it off. "Draw modded content from its kin", in this mod's
   options, on by default. Off, modded content keeps its letter.
@@ -305,13 +299,13 @@ in its local IndexedDB cache. Switching to that row again reuses the cache.
 | Archive | Files | Size |
 | --- | --- | --- |
 | `neo-linoleum-mod.zip` | 5 | 0.03 MiB |
-| `neo-linoleum-original-tiles.zip` | 4 | 0.16 MiB |
-| `neo-linoleum-adam-bolt.zip` | 4 | 0.46 MiB |
-| `neo-linoleum-gervais.zip` | 4 | 1.26 MiB |
-| `neo-linoleum-nomad.zip` | 4 | 0.05 MiB |
-| `neo-linoleum-shockbolt.zip` | 5 | 16.75 MiB |
+| `neo-linoleum-original-tiles.zip` | 2 | 0.16 MiB |
+| `neo-linoleum-adam-bolt.zip` | 2 | 0.46 MiB |
+| `neo-linoleum-gervais.zip` | 2 | 1.25 MiB |
+| `neo-linoleum-nomad.zip` | 2 | 0.05 MiB |
+| `neo-linoleum-shockbolt.zip` | 3 | 16.75 MiB |
 
-That is 26 archive entries and 18.7 MiB in total. Shockbolt Dark and Light use the same atlas, so they share one five-file source archive; two copies would make the compact form larger than the old loose-pack payload. The game's installer fetches each archive from a pinned tag, records the SHA-256 of the bytes that arrived, and unpacks them into the mod's own folder. The cache holds only derived files, and reinstalling or updating the mod starts a fresh conversion namespace. Nothing about these packs lives in the game's repository.
+That is 16 archive entries and 18.7 MiB in total. Shockbolt Dark and Light use the same atlas, so they share one three-file source archive with a tile map for each mode; two copies of the atlas would make the compact form larger than the old loose-pack payload. The game's installer fetches each archive from a pinned tag, records the SHA-256 of the bytes that arrived, and unpacks them into the mod's own folder. The cache holds only derived files, and reinstalling or updating the mod starts a fresh conversion namespace. Nothing about these packs lives in the game's repository.
 
 You can also just use the folder: clone this repository into your mods directory, or
 point the browser build at it with **Load mod folder**. Unzip the source archives beside
@@ -322,10 +316,7 @@ point the browser build at it with **Load mod folder**. Unzip the source archive
 <details>
 <summary>Why six archives rather than 9149 committed loose files, or one big zip</summary>
 
-A loose pack is one PNG per tile, but the shipped input is an atlas plus its mapping
-texts. An `archive` payload is one HTTP request and one digest; the alternative, a
-`files` payload, would be a request per input file and makes partial installs harder to
-diagnose.
+A loose pack is one PNG per tile, but the shipped input is an atlas plus a JSON tile map. An `archive` payload is one HTTP request and one digest; the alternative, a `files` payload, would be a request per input file and makes partial installs harder to diagnose.
 
 One archive per source atlas, rather than a single archive for everything, means a failed digest names the source that failed, and a fix rewrites only that archive. Shockbolt's one atlas serves two rows, so it gets one archive rather than a duplicated pair.
 
