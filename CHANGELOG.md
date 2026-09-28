@@ -26,6 +26,10 @@ were not retagged.
 
 ## [Unreleased]
 
+### Removed
+
+- [Internal] **Removed this repo's own Discord release announcer.** Its workflow, script and test are gone. The releases site at releases.rpgm.tools now posts each new release to the Neo Angband announcements forum.
+
 ## 1.4.0 - 2026-09-27
 
 ### Changed
