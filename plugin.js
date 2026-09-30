@@ -58,6 +58,7 @@ const BASE_PACK = "core";
 
 /** The object-record field that leaves one added item at its plain glyph. */
 const NO_OBJECT_KIN_FILL = "linoleum:no-object-kin-fill";
+const NO_MONSTER_KIN_FILL = "linoleum:no-monster-kin-fill";
 
 /** Whether a record was ADDED by a mod, rather than being core's own. */
 export function addedByMod(rec) {
@@ -108,7 +109,7 @@ export function fillFromKin(fill, registries) {
     if (tile && !monsterDonors.has(race.base.name)) monsterDonors.set(race.base.name, tile);
   }
   for (const race of races) {
-    if (!addedByMod(race) || fill.monsterTile(race.ridx)) continue;
+    if (!addedByMod(race) || race.ext?.[NO_MONSTER_KIN_FILL] === true || fill.monsterTile(race.ridx)) continue;
     const donor = monsterDonors.get(race.base.name);
     if (!donor) continue;
     if (fill.fillMonster(race.ridx, variantOf(donor))) monsters += 1;

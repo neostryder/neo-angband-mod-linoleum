@@ -87,7 +87,7 @@ creature sharing its family, an added item from another item of its type. So a
 modded ant is a recognisable ant without its author naming a single pixel
 coordinate, and it is not the base game's ant either.
 
-Kin fill is the default for new mod-added content. An added object whose type-mates would be actively misleading can set `"linoleum:no-object-kin-fill": true` in its object record, which leaves it at its plain glyph until it has a tile of its own. The content mod must list `linoleum` as a dependency or optional dependency so its declared boolean field survives composition.
+Kin fill is the default for new mod-added content. When a relative's tile would mislead the player, an added item or monster can opt out: set `"linoleum:no-object-kin-fill": true` on its object record or `"linoleum:no-monster-kin-fill": true` on its monster record, and it keeps its plain glyph until it gets a tile of its own. Either field only survives composition when the content mod lists `linoleum` as a dependency or optional dependency.
 
 **Under Angband's own tile sheets, it stays a letter.** Those sheets are one image cut into a fixed grid, and every cell already holds somebody's tile, so there is no spare cell for a variant. The most that could be done is an exact copy of another creature's tile, and that call is not this mod's to make.
 
@@ -101,7 +101,7 @@ In practice:
   randomness, the clock or your save.
 - Nothing you did not add is changed. Only records a mod ADDED are given a tile this way, so an unmodded game draws exactly what it always drew, and a pack with no mods installed produces none of these at all. Kin fill only ever gives a tile to something that has none. The game itself stops it from changing a tile your pack already sets, so turning it on leaves your tile set looking exactly as it did.
 - You can still choose the tile yourself. Name an asset for your monster in a target map and that wins outright.
-- An added item can opt out of kin fill with `"linoleum:no-object-kin-fill": true` when a related item's tile would be misleading. It then keeps its plain glyph.
+- An added item or monster can opt out of kin fill with `"linoleum:no-object-kin-fill": true` or `"linoleum:no-monster-kin-fill": true` when a relative's tile would be misleading. It then keeps its plain glyph.
 - You can turn it off. "Draw modded content from its kin", in this mod's
   options, on by default. Off, modded content keeps its letter.
 

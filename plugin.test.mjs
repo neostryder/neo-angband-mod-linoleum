@@ -177,6 +177,23 @@ describe("fillFromKin", () => {
     expect(d.derivedCount()).toBe(1);
   });
 
+  it("leaves an opted-out monster at its glyph while object kin fill remains active", () => {
+    const registries = {
+      monsters: { races: races(
+        { name: "giant ant", base: "ant" },
+        { name: "misleading ant", base: "ant", from: MOD, ext: { "linoleum:no-monster-kin-fill": true } },
+        { name: "mod ant", base: "ant", from: MOD },
+      ) },
+      objects: { kinds: kinds({ name: "Flask of Oil", tval: 27 }, { name: "Mod Flask", tval: 27, from: MOD }) },
+    };
+    const d = door({ monster: { 0: { attr: 0x81, char: 0x82 } }, object: { 0: { attr: 0x83, char: 0x84 } } });
+
+    expect(fillFromKin(d.fill, registries)).toEqual({ monsters: 1, objects: 1 });
+    expect(d.monsterTiles.has(1)).toBe(false);
+    expect(d.monsterTiles.get(2)).not.toEqual(d.monsterTiles.get(0));
+    expect(d.objectTiles.get(1)).not.toEqual(d.objectTiles.get(0));
+  });
+
   it("leaves monster kin fill unchanged by an object opt-out", () => {
     const registries = {
       monsters: { races: races({ name: "giant ant", base: "ant" }, { name: "mod ant", base: "ant", from: MOD }) },
@@ -389,6 +406,11 @@ describe("register", () => {
     expect(manifest.fields).toContainEqual({
       name: "no-object-kin-fill",
       files: ["object"],
+      type: "boolean",
+    });
+    expect(manifest.fields).toContainEqual({
+      name: "no-monster-kin-fill",
+      files: ["monster"],
       type: "boolean",
     });
   });

@@ -12,6 +12,11 @@
       "name": "no-object-kin-fill",
       "files": ["object"],
       "type": "boolean"
+    },
+    {
+      "name": "no-monster-kin-fill",
+      "files": ["monster"],
+      "type": "boolean"
     }
   ],
   "engine": ">=1.19.0",
