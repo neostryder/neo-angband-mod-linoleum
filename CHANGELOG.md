@@ -30,6 +30,10 @@ were not retagged.
 
 - [Visible] [Modding-API] **`linoleum:no-monster-kin-fill` keeps an added monster at its letter.** It is the monster counterpart of `linoleum:no-object-kin-fill`: set it to `true` on a monster record whose relatives' tiles would mislead, and kin fill skips that monster while still filling items.
 
+### Changed
+
+- [Visible] [Compatibility] **The tile packs now need Neo Angband 1.21.0 or later**, the version they are built and tested against.
+
 ### Removed
 
 - [Internal] **Removed this repo's own Discord release announcer.** Its workflow, script and test are gone. The releases site at releases.rpgm.tools now posts each new release to the Neo Angband announcements forum.
