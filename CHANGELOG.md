@@ -26,6 +26,8 @@ were not retagged.
 
 ## [Unreleased]
 
+## 1.5.0 - 2026-10-01
+
 ### Added
 
 - [Visible] [Modding-API] **`linoleum:no-monster-kin-fill` keeps an added monster at its letter.** It is the monster counterpart of `linoleum:no-object-kin-fill`: set it to `true` on a monster record whose relatives' tiles would mislead, and kin fill skips that monster while still filling items.
