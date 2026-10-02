@@ -77,7 +77,7 @@ It also does two things a fixed sheet cannot:
 
 See the [settings reference](SETTINGS.md) for every flag, its default, and when a change takes effect.
 
-**The rule below came into this mod in Linoleum 0.15.0.** Before that, the game drew modded creatures itself. Linoleum now draws them through a hook the game added in 0.23.0, so on a game older than that, keep Linoleum 0.14.4, which has the same tile sets. This release asks for Neo Angband 1.21.0 or newer, the version it was built and tested against.
+**The rule below came into this mod in Linoleum 0.15.0.** Before that, the game drew modded creatures itself. Linoleum now draws them through a hook the game added in 0.23.0, so on a game older than that, keep Linoleum 0.14.4, which has the same tile sets. This release asks for Neo Angband 1.21.1 or newer, the version it was built and tested against.
 
 The rule moved because Neo Angband is a faithful port of Angband 4.2.6, and 4.2.6 has no concept of a record added by a mod, so it has no view on what one should look like. Borrowing the nearest relative's picture is a design choice, and the port does not add design choices of its own. It is also a choice about somebody else's art: a tile set drawn in 2003 has no picture for content added twenty years later, and showing a sibling's picture there misleads where a plain letter would not. A tile set making that call for its own art is on firmer ground, so the rule lives here now.
 

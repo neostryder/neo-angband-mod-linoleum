@@ -28,8 +28,8 @@
     "verify": "pnpm test && node tools/pack.mjs --verify"
   },
   "devDependencies": {
-    "@rpgm-tools/neo-angband-core": "1.21.0",
-    "@rpgm-tools/neo-angband-mod-sdk": "1.21.0",
+    "@rpgm-tools/neo-angband-core": "1.21.1",
+    "@rpgm-tools/neo-angband-mod-sdk": "1.21.1",
     "vitest": "^4.1.10"
   },
   "engines": {

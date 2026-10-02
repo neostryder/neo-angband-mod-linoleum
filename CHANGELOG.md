@@ -32,7 +32,7 @@ were not retagged.
 
 ### Changed
 
-- [Visible] [Compatibility] **The tile packs now need Neo Angband 1.21.0 or later.** They are built and tested against that version.
+- [Visible] [Compatibility] **The tile packs now need Neo Angband 1.21.1 or later.** They are built and tested against that version.
 
 ### Removed
 

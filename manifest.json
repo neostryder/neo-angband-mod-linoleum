@@ -19,7 +19,7 @@
       "type": "boolean"
     }
   ],
-  "engine": ">=1.21.0",
+  "engine": ">=1.21.1",
   "rules": [
     {
       "flag": "linoleum.deriveTiles",
