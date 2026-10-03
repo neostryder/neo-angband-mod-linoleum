@@ -53,7 +53,7 @@ target:feat:GRANITE:asset:feat_granite_lit_0
 
 You edit one file at a time, and the map says what it is for in words.
 
-It also does two things a fixed sheet cannot:
+It also does five things a fixed sheet cannot:
 
 - Variant pools. One symbol, creature or item can draw from several tiles instead
   of always the same one. Which tile a given square gets is chosen by map position, so
@@ -324,13 +324,13 @@ The mod's five root files get an archive of their own. An installed mod's file l
 
 This README is shipped content. `manifest.json`, `plugin.js`, `README.md`, `LICENSE.md` and `CREDITS.md` are the five files inside `neo-linoleum-mod.zip`, so editing any of them, even to fix a typo or a link, changes that archive's digest and leaves the committed copy stale. Re-run `node tools/pack.mjs` in the same commit, because a documentation-only change here is still a build.
 
-The zips are written deterministically (sorted entries, fixed timestamps, stdlib `zlib` only), so the digest depends only on content and a rebuild anywhere gives the same bytes. Two builds into different directories produced seven identical files.
+The zips are written deterministically (sorted entries, fixed timestamps, stdlib `zlib` only), so the digest depends only on content and a rebuild anywhere gives the same bytes. Two builds into different directories produced six identical files.
 
 </details>
 
 ## Status
 
-**0.17.0: complete and working, but not yet 1.0.** 0.15.0 was the first version to carry code: one `plugin.js` holding the kin rule that moved out of the game, with its own tests in this repository. 0.16.0 added the shapechange rule to the same file.
+**Complete and working.** 0.15.0 was the first version to carry code: one `plugin.js` holding the kin rule that moved out of the game, with its own tests in this repository. 0.16.0 added the shapechange rule to the same file.
 
 The shapechange rule has been seen rendering in the game. Its tier tables and palettes are checked value by value, its monster names against Angband's own monster list and its tiles against the shipped packs' target maps, and the whole path from the switch to an allocated tile is driven through the game's real door over real art. In a live game, a level 2 Human Druid under Adam Bolt's tiles cast Fox Form, and the tile on the player's square changed from the normal figure to a mirrored, repainted quadruped that followed the player through a move. That covers one form and one class palette under one pack. The wider survey of two forms and two palettes, and the aesthetic calls it needs, is still open; see [PLANNED.md](PLANNED.md).
 

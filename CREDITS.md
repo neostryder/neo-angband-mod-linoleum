@@ -24,18 +24,18 @@ art wherever the art goes.
 
 ## What this repository ships
 
-All six selectable packs ship as compact source tilesheets in six archives under `dist/`:
+All six selectable packs ship as compact source tilesheets in five of the six archives under `dist/`:
 
 | Archive | Contents | Source art's terms |
 | --- | --- | --- |
-| `neo-linoleum-mod.zip` | manifest, README, LICENSE, this file | this mod's own |
+| `neo-linoleum-mod.zip` | manifest, plugin, README, LICENSE, this file | this mod's own |
 | `neo-linoleum-original-tiles.zip` | 8x8 Original atlas + prefs | GPL v2 or the Angband licence |
 | `neo-linoleum-adam-bolt.zip` | 16x16 Adam Bolt atlas + prefs | redistributable and modifiable for any purpose |
 | `neo-linoleum-gervais.zip` | 32x32 David Gervais atlas + prefs | Creative Commons Attribution 3.0 |
 | `neo-linoleum-nomad.zip` | 8x16 Nomad atlas + prefs | GPL v2 or the Angband licence |
 | `neo-linoleum-shockbolt.zip` | shared 64x64 Shockbolt atlas + Dark/Light prefs | (C) Raymond "Shockbolt" Gaustadnes 2012, see below |
 
-Together the archives hold 26 entries, 18.7 MiB as zip. The first time the mod is enabled, the game produces the same loose art locally and caches it. The five sets are under different terms, so being shipped with Linoleum does not put them under one licence. Angband 4.2.6's `docs/copying.rst` is the authoritative statement for all five.
+Together the archives hold 16 entries, 18.7 MiB as zip. The first time the mod is enabled, the game produces the same loose art locally and caches it. The five sets are under different terms, so being shipped with Linoleum does not put them under one licence. Angband 4.2.6's `docs/copying.rst` is the authoritative statement for all five.
 
 The source archives are committed and the generated loose files are not. `tools/build-packs.mjs` stages the archives from a Neo Angband checkout, and `node tools/pack.mjs --verify`, which CI runs on every push, checks that the committed archives match those sources.
 
