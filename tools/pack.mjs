@@ -53,7 +53,14 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
  * find, which reports as a mod fault with nothing in this repository able to have
  * noticed - so it is listed beside the manifest that declares it.
  */
-const ROOT_FILES = ["manifest.json", "plugin.js", "README.md", "LICENSE.md", "CREDITS.md"];
+const ROOT_FILES = [
+  "manifest.json",
+  "plugin.js",
+  "core-adapter.js", // plugin.js imports it
+  "README.md",
+  "LICENSE.md",
+  "CREDITS.md",
+];
 
 /** The archive that carries ROOT_FILES, and nothing else. */
 const MOD_ARCHIVE = "neo-linoleum-mod.zip";
