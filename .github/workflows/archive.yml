@@ -1,7 +1,7 @@
 # The committed archives must match freshly staged compact source art.
 #
 # dist/ holds six zips: one per distinct source atlas, plus neo-linoleum-mod.zip carrying
-# manifest.json, plugin.js, README.md, LICENSE.md and CREDITS.md. Those five are duplicated
+# manifest.json, plugin.js, core-adapter.js, README.md, LICENSE.md and CREDITS.md. Those six are duplicated
 # from the repository root, because an installed mod's file list is whatever its
 # archives contained and the game's validator wants a top-level manifest.json from
 # every source alike. Duplication drifts, so this is the check that catches it:
@@ -41,6 +41,7 @@ on:
     paths:
       - manifest.json
       - plugin.js
+      - core-adapter.js
       - README.md
       - LICENSE.md
       - CREDITS.md
@@ -54,6 +55,7 @@ on:
     paths:
       - manifest.json
       - plugin.js
+      - core-adapter.js
       - README.md
       - LICENSE.md
       - CREDITS.md

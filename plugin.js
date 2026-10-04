@@ -30,6 +30,10 @@
  * fallback for the mods that do not, not a substitute for drawing an orc.
  */
 
+import { characterOf, createAdapter } from "./core-adapter.js";
+
+export { characterOf };
+
 /**
  * The hue rotations a derived tile takes, in the order they are handed out.
  *
@@ -529,28 +533,22 @@ export function shapeTileFor(table, view) {
   return chosen;
 }
 
-/** The class and race of the character in a live game state, or null. */
-export function characterOf(state) {
-  const player = state && state.actor ? state.actor.player : null;
-  if (!player || !player.cls || !player.race) return null;
-  const cls = player.cls.name;
-  const race = player.race.name;
-  return typeof cls === "string" && typeof race === "string" ? { cls, race } : null;
-}
-
 export default {
   api: 1,
 
   register(host, ctx) {
+    const { meta, view, content, engine } = createAdapter(ctx);
+    const flags = meta.flags;
+
     /* An older game has no tile door at all. Say so once rather than throwing:
      * every tile pack in this mod still works, and the fallback art is the only
      * thing missing. */
-    if (!host || !host.tiles || typeof host.tiles.register !== "function") {
-      ctx.log("this game has no tile-filling seam, so modded content keeps its letter");
+    if (!engine.hasTileDoor(host)) {
+      meta.log("this game has no tile-filling seam, so modded content keeps its letter");
       return;
     }
 
-    const kin = !(ctx.flags && ctx.flags["linoleum.deriveTiles"] === false);
+    const kin = !(flags && flags["linoleum.deriveTiles"] === false);
 
     /* ON ONLY WHEN THE PLAYER SAID SO, where the kin rule is on by default, and
      * the difference between the two is the reason. The kin rule fills a tile
@@ -558,14 +556,14 @@ export default {
      * the picture the pack draws for the character, which is not what somebody
      * installing a tile set asked for. `!== true` rather than `!== false`, so a
      * game too old to resolve the rule at all leaves it off. */
-    const wantShapes = !!(ctx.flags && ctx.flags["linoleum.shapeTiles"] === true);
+    const wantShapes = !!(flags && flags["linoleum.shapeTiles"] === true);
     /* An older game has the fill door but not the player door. Everything else
      * here still works, so this is a line in the log rather than a refusal - and
      * it is only said when the player turned the rule on, because otherwise it
      * would be noise about a feature nobody asked for. */
-    const canShape = typeof host.tiles.player === "function";
+    const canShape = engine.hasPlayerDoor(host);
     if (wantShapes && !canShape) {
-      ctx.log("this game has no player-tile seam, so a shapechanged character keeps its own picture");
+      meta.log("this game has no player-tile seam, so a shapechanged character keeps its own picture");
     }
     const shapes = wantShapes && canShape;
 
@@ -580,24 +578,24 @@ export default {
       /* Registered once, outside the filler, because a provider is a lookup and
        * the thing it looks in is what the filler rebuilds. Registering it inside
        * would tie "is there a provider" to "has a pack loaded yet". */
-      host.tiles.player((view) => shapeTileFor(shapeTable, view));
+      engine.registerPlayerTile(host, (drawn) => shapeTileFor(shapeTable, drawn));
     }
 
-    host.tiles.register((fill) => {
+    engine.registerTileFiller(host, (fill) => {
       shapeTable = null;
       /* NOT THIS MOD'S ART TO GUESS AT. A linoleum pack is this mod's, converted or
        * hand-authored, and a fill there is a decision this mod is entitled to make.
        * A tilesheet is Angband's own fixed atlas, where the honest answer for
        * content it predates is the letter the game would draw anyway. */
       if (fill.pack.engine !== "linoleum") return;
-      const registries = ctx.registries;
+      const registries = content.tables();
       /* Before Neo Angband 0.23.0 a plugin could not ask what the game was made
        * of, so there is nothing to walk and nothing to fill. */
       if (!registries) return;
       if (kin) {
         const filled = fillFromKin(fill, registries);
         if (filled.monsters > 0 || filled.objects > 0) {
-          ctx.log(
+          meta.log(
             `drew ${filled.monsters} added creature(s) and ${filled.objects} added item(s) ` +
               `from their nearest kin in ${fill.pack.menuname}`,
           );
@@ -607,16 +605,16 @@ export default {
       /* AFTER the kin fill, so a shape whose creature was itself supplied by
        * that rule borrows the tile it just got rather than nothing. Nothing in
        * stock content needs that; a content mod replacing a werewolf would. */
-      const table = buildShapeTiles(fill, registries, characterOf(ctx.state));
+      const table = buildShapeTiles(fill, registries, view.player());
       if (table === null) {
         /* No live character, or a class or race this mod has no palette for -
          * a content mod's own class. Said once per pack load, because a silent
          * nothing is indistinguishable from the rule being off. */
-        ctx.log("no shape palette for this character, so a shapechanged form keeps its own picture");
+        meta.log("no shape palette for this character, so a shapechanged form keeps its own picture");
         return;
       }
       shapeTable = table;
-      ctx.log(
+      meta.log(
         `drew ${table.drawn} shapechange tile(s) for a ${table.race} ${table.cls} in ` +
           `${fill.pack.menuname}` +
           (table.absent.length > 0 ? `; ${table.absent.length} band(s) fell back: ${table.absent.join(", ")}` : ""),

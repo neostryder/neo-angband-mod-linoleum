@@ -50,7 +50,7 @@ jobs:
           tag="${{ github.event.inputs.tag || github.ref_name }}"
           version="${tag#v}"
           echo "version=$version" >> "$GITHUB_ENV"
-          zip -j "neo-angband-mod-linoleum-$version.zip" manifest.json plugin.js
+          zip -j "neo-angband-mod-linoleum-$version.zip" manifest.json plugin.js core-adapter.js
 
       - name: Upload to Nexus Mods
         if: steps.configured.outputs.ready == 'true'
