@@ -49,7 +49,7 @@ if (!existsSync(planEntry)) fail(`no built conversion plan at ${planEntry}`);
 const { tileMapDocumentText } = await import(pathToFileURL(planEntry).href);
 const known = new Map(linoleum.ALL_PACKS.map((pack) => [pack.key, pack]));
 
-const manifest = JSON.parse(readFileSync(join(root, "manifest.json"), "utf8"));
+const manifest = JSON.parse(readFileSync(join(root, "manifest.json"), "utf8")).data;
 const declared = (Array.isArray(manifest.tilePacks) ? manifest.tilePacks : []).map((entry) => ({
   path: entry?.path,
   source: entry?.tilesheet,
