@@ -49,7 +49,7 @@ describe("shipped tile maps", () => {
     const { ALL_PACKS } = await import(pathToFileURL(CONVERTER).href);
     const { parseDocument } = await import(join(GAME, "packages", "mod-sdk", "src", "json", "index.ts"));
     const { linoleumTileMapFormat } = await import(join(GAME, "packages", "mod-sdk", "src", "json", "linoleum.ts"));
-    const declared = JSON.parse(readFileSync(join(HERE, "manifest.json"), "utf8")).tilePacks;
+    const declared = JSON.parse(readFileSync(join(HERE, "manifest.json"), "utf8")).data.tilePacks;
     expect(declared).toHaveLength(6);
     for (const pack of declared) {
       const source = pack.tilesheet;
@@ -413,7 +413,7 @@ describe("the shape tiers against real Angband data", () => {
       );
     }
 
-    const manifest = JSON.parse(readFileSync(join(HERE, "manifest.json"), "utf8"));
+    const manifest = JSON.parse(readFileSync(join(HERE, "manifest.json"), "utf8")).data;
     const declared = manifest.tilePacks;
     if (!Array.isArray(declared) || declared.length === 0) {
       throw new Error("manifest.json declares no tilesheet packs to measure");

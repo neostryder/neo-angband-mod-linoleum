@@ -395,7 +395,7 @@ describe("register", () => {
      * cannot see; one in the manifest and unread is a switch that does nothing.
      * Both have shipped in this project, so the two are compared. */
     const { readFileSync } = await import("node:fs");
-    const manifest = JSON.parse(readFileSync(new URL("./manifest.json", import.meta.url), "utf8"));
+    const manifest = JSON.parse(readFileSync(new URL("./manifest.json", import.meta.url), "utf8")).data;
     const flags = (manifest.rules ?? []).map((r) => r.flag);
     expect(flags).toContain("linoleum.deriveTiles");
     expect(readFileSync(new URL("./plugin.js", import.meta.url), "utf8")).toContain(
@@ -951,7 +951,7 @@ describe("the shapechange rule, through register", () => {
      * undeclared is a switch the player cannot see, and one declared and unread
      * is a switch that does nothing. */
     const { readFileSync } = await import("node:fs");
-    const manifest = JSON.parse(readFileSync(new URL("./manifest.json", import.meta.url), "utf8"));
+    const manifest = JSON.parse(readFileSync(new URL("./manifest.json", import.meta.url), "utf8")).data;
     const rule = (manifest.rules ?? []).find((r) => r.flag === "linoleum.shapeTiles");
     expect(rule).toBeDefined();
     expect(rule.default).toBe(false);
