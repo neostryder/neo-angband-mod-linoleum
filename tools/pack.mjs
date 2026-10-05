@@ -99,7 +99,7 @@ function note(message) {
  * other name is a Graphics row that silently draws nothing.
  */
 function declaredPacks() {
-  const manifest = JSON.parse(readFileSync(join(root, "manifest.json"), "utf8"));
+  const manifest = JSON.parse(readFileSync(join(root, "manifest.json"), "utf8")).data;
   const packs = Array.isArray(manifest.tilePacks) ? manifest.tilePacks : [];
   const declared = packs.map((p) => ({ path: p?.path, source: p?.tilesheet }));
   if (declared.length === 0) fail("manifest.json declares no tilePacks");
