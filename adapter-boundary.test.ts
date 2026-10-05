@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { readdirSync, readFileSync } from "node:fs";
 
-/** The boundary keeps engine access in core-adapter.js so a port changes one import. */
+/** Context reads stay in core-adapter.js because API 2 needs tile declarations before the plugin can change adapters. */
 describe("the engine adapter boundary", () => {
   const ADAPTER = "core-adapter.js";
   const API2_ADAPTER = "core-adapter-api2.js";
@@ -10,29 +10,41 @@ describe("the engine adapter boundary", () => {
   const FORBIDDEN: readonly (readonly [string, RegExp])[] = [
     [
       "a raw context member",
-      new RegExp(`${CONTEXT}(?:\\?\\.|\\.)\\s*(?:core|state|registries|snapshot|intent|events|characterStore|prefs|inspect|keymaps|ui|knownLevel|character|prompt)\\b`, "u"),
+      new RegExp(`${CONTEXT}(?:\\?\\.|\\.)\\s*(?:core|state|registries|snapshot|intent|events|characterStore|prefs|inspect|keymaps|ui|knownLevel|character|prompt|flags|log)\\b`, "u"),
     ],
     ["a registries read", /\.\s*registries\b/u],
     ["a string-keyed context read", new RegExp(`${CONTEXT}(?:\\?\\.)?\\[`, "u")],
-    ["an engine member destructured from the context", /\{[^}]*\b(?:core|state|registries)\b[^}]*\}\s*=\s*\(*\s*ctx\b/u],
+    ["an engine member destructured from the context", /\{[^}]*\}\s*=\s*\(*\s*ctx\b/u],
+    ["a context alias outside the adapter", /\b(?:const|let|var)\s+[\w$]+\s*=\s*\(*\s*ctx\b/u],
     ["a tile door called on the registry host", /\bhost\s*!?\s*(?:as\s+[\w.<>[\]|&]+\s*)?\)*\s*(?:\?\.|\.)\s*tiles\b/u],
     ["a read of the live game state", /\.\s*actor\s*!?\s*(?:\?\.|\.)\s*player\b/u],
-    ["an engine namespace outside the adapter", /\b[\w$]+engine\b|\bengine\s*!?\s*(?:as\s+[\w.<>[\]|&]+\s*)?\)*\s*(?:\?\.|\.|\[)/iu],
+    ["an engine namespace outside the adapter", /\b[\w$]+engine\b|\bengine\s*!?\s*(?:as\s+[\w.<>[\]|&]+\s*)?\)*\s*(?:\?\.|\.|\[)|(?<!\.\s*)\bengine\b/iu],
   ];
 
   const ENGINE_IMPORT = /\b(?:from\s*|import\s*(?:\(\s*)?|require\s*\(\s*)["']@rpgm-tools\/neo-angband-core(?:\/[^"']*)?["']/u;
+  const QUOTED = /"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`/gu;
+  let tileArguments = String.raw`\([^()]*\)`;
+  for (let depth = 0; depth < 4; depth++) tileArguments = String.raw`\((?:[^()]|${tileArguments})*\)`;
+  const TILE_CALL = new RegExp(String.raw`\bengine\s*\.\s*(?:hasTileDoor|hasPlayerDoor|registerTileFiller|registerPlayerTile)\s*(${tileArguments})(?!\s*!?\s*(?:\?\.|\.|\[))`, "gu");
 
   const stripComments = (code: string): string =>
-    code.replace(/("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')|\/\*[\s\S]*?\*\/|\/\/[^\n]*/gu, (whole: string, quoted: string | undefined) => quoted ?? " ");
+    code.replace(new RegExp(`(${QUOTED.source})|/\\*[\\s\\S]*?\\*/|//[^\\n]*`, "gu"), (whole: string, quoted: string | undefined) => quoted ?? " ");
+
+  const stripStrings = (code: string): string =>
+    code.replace(QUOTED, (quoted: string) => quoted.startsWith("`")
+      ? [...quoted.matchAll(/(?<!\\)\$\{([\s\S]*?)\}/gu)].map(([, expression]) => stripStrings(expression)).join(" ")
+      : " ");
 
   const scan = (file: string, source: string): string[] => {
     const code = stripComments(source);
     const hits: string[] = [];
     if (ENGINE_IMPORT.test(code)) hits.push("an import of the engine");
     if (file === ADAPTER) return hits;
-    const identifiers = code.replace(/"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'/gu, " ");
+    const identifiers = stripStrings(code);
     if (file === API2_ADAPTER && /\bctx\b/u.test(identifiers)) hits.push("a context identifier in the API 2 adapter");
-    const withoutTileAdapter = identifiers.replace(/\bengine\s*\.\s*(?:hasTileDoor|hasPlayerDoor|registerTileFiller|registerPlayerTile)\b/gu, " ");
+    const withoutTileAdapter = identifiers
+      .replace(/\bconst\s*\{\s*meta\s*,\s*view\s*,\s*content\s*,\s*engine\s*\}\s*=\s*createAdapter\(\s*ctx\s*\)/gu, " ")
+      .replace(TILE_CALL, "$1");
     for (const [what, re] of FORBIDDEN) {
       if (re.test(what === "an engine namespace outside the adapter" ? withoutTileAdapter : identifiers)) hits.push(what);
     }
@@ -72,6 +84,9 @@ describe("the engine adapter boundary", () => {
     "ctx?.state;",
     "(ctx as any)[\"state\"];",
     "const { state } = (ctx as any);",
+    "const { core } = ctx;",
+    "const { actor } = (ctx as any);",
+    "(state as any).actor.player;",
     "host!.tiles;",
     "(host as any).tiles;",
     "gameEngine.core;",
@@ -79,11 +94,33 @@ describe("the engine adapter boundary", () => {
     "const stolenEngine = value;",
     "return stolenengine;",
     "engine.core;",
+    "ctx.flags;",
+    "ctx.log('Tile pack loaded');",
+    "mod.meta.log(`${ctx.flags}`);",
+    "const { log } = ctx;",
+    "const { engine } = ctx;",
+    "const x = ctx; x.core;",
+    "let y = ctx; y.state;",
+    "this.ctx.core;",
+    "obj.ctx.state;",
+    "const e = engine;",
+    "f(engine);",
+    "return engine;",
+    "engine.hasTileDoor(host).core;",
+    "engine.hasPlayerDoor(host)[\"state\"];",
+    "engine.registerTileFiller(host, filler)?.core;",
+    "engine.registerPlayerTile(host, provider).core;",
+    "engine.hasTileDoor(host, f(g(host))).core;",
+    "engine.hasTileDoor(host)!.core;",
+    "engine.registerTileFiller(host, () => engine.core);",
     "export { player } from \"@rpgm-tools/neo-angband-core\";",
     "import(\"@rpgm-tools/neo-angband-core\");",
     "import \"@rpgm-tools/neo-angband-core\";",
     "import { player } from \"@rpgm-tools/neo-angband-core/player\";",
     "require(\"@rpgm-tools/neo-angband-core\");",
+    "require(\"@rpgm-tools/neo-angband-core/engine\");",
+    "import x = require(\"@rpgm-tools/neo-angband-core\");",
+    "import x = require(\"@rpgm-tools/neo-angband-core/engine\");",
   ])("rejects %s", (source) => {
     expect(scan("plugin.js", source).length).toBeGreaterThan(0);
   });
@@ -95,5 +132,9 @@ describe("the engine adapter boundary", () => {
   it("allows tile adapter calls and ignores comments and quoted context names", () => {
     expect(scan("plugin.js", 'engine.hasTileDoor(host); // ctx.state\n"ctx.state";')).toEqual([]);
     expect(scan(API2_ADAPTER, 'mod.meta.log("ctx"); /* ctx.state */')).toEqual([]);
+    expect(scan(API2_ADAPTER, 'mod.meta.log(`ctx // ctx.state /* ctx.core */`);')).toEqual([]);
+    expect(scan("plugin.js", '`ctx.flags engine.core`;')).toEqual([]);
+    expect(scan(API2_ADAPTER, 'mod.meta.log(`${"ctx"}`);')).toEqual([]);
+    expect(scan("plugin.js", 'engine.hasPlayerDoor(host); engine.registerTileFiller(host, (fill) => f(fill)); engine.registerPlayerTile(host, (drawn) => f(drawn));')).toEqual([]);
   });
 });
