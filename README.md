@@ -75,6 +75,35 @@ It also does five things a fixed sheet cannot:
 
 ## Tiles for modded content
 
+```mermaid
+flowchart TD
+  REG["register"] --> ADAPT["createAdapter<br/>core-adapter.js"]
+  ADAPT --> DOOR{"host.tiles.register exists"}
+  DOOR -->|"no"| LOG["Log missing seam and return"]
+  DOOR -->|"yes"| FLAGS["Read deriveTiles and shapeTiles"]
+  FLAGS --> ACTIVE{"Kin fill or shape tiles enabled"}
+  ACTIVE -->|"no"| RETURN["Return"]
+  ACTIVE -->|"yes"| FILL["Register tile filler"]
+  FILL --> LOAD["Pack loads<br/>clear shapeTable"]
+  LOAD --> ENGINE{"fill.pack.engine is linoleum"}
+  ENGINE -->|"no"| RETURN
+  ENGINE -->|"yes"| TABLES{"Registries exist"}
+  TABLES -->|"no"| RETURN
+  TABLES -->|"yes"| KIN{"deriveTiles is not false"}
+  KIN -->|"no"| SHAPES["Continue to optional shape tiles"]
+  KIN -->|"yes"| DONOR["Index existing donor tiles<br/>monster base or object tval"]
+  DONOR --> WALK["Walk monsters.races and objects.kinds"]
+  WALK --> ELIGIBLE{"Added by a mod<br/>no existing tile<br/>no kin-fill opt-out"}
+  ELIGIBLE -->|"no"| NEXT["Skip record"]
+  ELIGIBLE -->|"yes"| FOUND{"Same-base or same-tval donor exists"}
+  FOUND -->|"no"| NEXT
+  FOUND -->|"yes"| DERIVE["derive hue variant<br/>or copy donor if derive returns null"]
+  DERIVE --> WRITE["fillMonster or fillObject<br/>refuse assigned slots"]
+  WALK -->|"After kin fill"| SHAPES
+```
+
+*Source of truth: `plugin.js` and `core-adapter.js`. The filler only adds tiles for mod-added records; explicit target-map tiles keep their slots.*
+
 See the [settings reference](SETTINGS.md) for every flag, its default, and when a change takes effect.
 
 **The rule below came into this mod in Linoleum 0.15.0.** Before that, the game drew modded creatures itself. Linoleum now draws them through a hook the game added in 0.23.0, so on a game older than that, keep Linoleum 0.14.4, which has the same tile sets. This release asks for Neo Angband 1.21.1 or newer, the version it was built and tested against.
@@ -113,6 +142,28 @@ something they were told about rather than something that looks broken.
 One limit: turning a colour does nothing to a grey tile. If the family's tile is stone, iron or bone, the derived tile comes back the same colour it went in. Stamping a mark onto somebody else's art would get around that, but it would misrepresent the art more than a similar colour does, so the limit stays. Full detail is in [docs/LINOLEUM.md](https://github.com/neostryder/neo-angband/blob/master/docs/LINOLEUM.md) in the main repository.
 
 ## A shapechanged character, drawn as the creature
+
+```mermaid
+flowchart TD
+  RULE{"shapeTiles is true<br/>and host.tiles.player exists"} -->|"no"| NORMAL["Pack's own player tile"]
+  RULE -->|"yes"| PROVIDER["Register player provider<br/>shapeTileFor"]
+  PROVIDER --> LOAD["Pack filler runs<br/>clear shapeTable"]
+  LOAD --> PACK{"Linoleum pack<br/>and registries exist"}
+  PACK -->|"no"| NORMAL
+  PACK -->|"yes"| CHAR{"Live character<br/>and known class and race palette"}
+  CHAR -->|"no"| NORMAL
+  CHAR -->|"yes"| PALETTE["paletteFor<br/>CLASS_PALETTES ramp<br/>RACE_HIGHLIGHTS fifth entry"]
+  PALETTE --> TIERS["buildShapeTiles reads SHAPE_TIERS<br/>fox, Pukel-man, bear, eagle<br/>bat, warg, vampire, werewolf"]
+  TIERS --> TILES["Look up each monster by name<br/>transform available donor<br/>mirror and recolor"]
+  TILES --> TABLE["shapeTable<br/>per-form minLevel bands"]
+  TABLE --> LIVE["shapeTileFor reads live<br/>class, race, shape and level"]
+  LIVE --> MATCH{"Class and race match<br/>and form has a drawable band"}
+  MATCH -->|"no"| NORMAL
+  MATCH -->|"yes"| PICK["Choose last drawable tier<br/>whose minLevel does not exceed level"]
+  PICK --> RESULT["Mirrored shape tile"]
+```
+
+*Source of truth: `plugin.js`, `core-adapter.js`, and `manifest.json`. Shape tiles are off by default, and a missing donor falls back to a lower tier or the pack's own player tile.*
 
 **Off by default.** "Draw a shapechanged character as the creature", in this mod's
 options.
@@ -289,6 +340,24 @@ own copies freely for your own use; check the licence before you share one.
 terms are spelled out.
 
 ## Installing
+
+```mermaid
+flowchart TD
+  ART["Neo Angband source art<br/>packages/web/public/tiles"] --> BUILD["tools/build-packs.mjs"]
+  PLAN["Built packages/linoleum converter<br/>ALL_PACKS and conversion-plan"] --> BUILD
+  MAN["manifest.json<br/>tilePacks and tilesheet declarations"] --> BUILD
+  BUILD -->|"Copy atlas and generate maps from prefs"| SOURCES["sources/set/source<br/>atlas PNG and tile-map JSON"]
+  SOURCES --> PACK["tools/pack.mjs<br/>dist source archive per atlas"]
+  PACK --> FETCH["Player installs source archives"]
+  FETCH --> ENABLE["Host first enables a Graphics row"]
+  ENABLE --> CROP["Host crops loose PNGs"]
+  CROP --> CACHE["IndexedDB cache<br/>manifest.txt, maps and images"]
+  CACHE --> DRAW["Linoleum tile engine"]
+  HAND["Hand-authored loose pack"] --> DRAW
+  SOURCES -.-> SHOCK["Shockbolt Dark and Light<br/>share one atlas and two maps"]
+```
+
+*Source of truth: `tools/build-packs.mjs`, `manifest.json`, and the README. The cached loose format differs from the compact files in each source archive.*
 
 **The source sheets ship here; loose files are made on demand.** `dist/` holds one
 compact source archive per distinct atlas, plus a small root archive for the
