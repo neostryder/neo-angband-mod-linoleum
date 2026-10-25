@@ -24,11 +24,12 @@
  *   4. Deterministic: the same content produces the same colours every launch.
  */
 
+import { apiRangeVerdict, validateManifest } from "@rpgm-tools/neo-angband-mod-sdk";
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import plugin, {
   addedByMod,
   buildShapeTiles,
-  characterOf,
   CLASS_PALETTES,
   fillFromKin,
   HUES,
@@ -39,6 +40,7 @@ import plugin, {
   SHAPE_TIERS,
   tierFor,
 } from "./plugin.js";
+import specPlugin, { characterOf } from "./spec-register.js";
 
 /** A stand-in for the game's fill door - see the header. */
 function door({
@@ -347,7 +349,7 @@ describe("register", () => {
 
   it("registers one filler, which fills a linoleum pack", () => {
     const h = host();
-    plugin.register(h, ctx());
+    specPlugin.register(h, ctx());
     expect(h.fillers.length).toBe(1);
 
     const d = door({ monster: { 0: { attr: 0x81, char: 0x82 } } });
@@ -359,7 +361,7 @@ describe("register", () => {
     /* The one place this mod says "not my art to guess at". Under Angband's own
      * tile sheets a modded creature keeps its letter, on purpose. */
     const h = host();
-    plugin.register(h, ctx());
+    specPlugin.register(h, ctx());
     const d = door({
       pack: { engine: "tilesheet", id: "old", menuname: "Original Tiles" },
       monster: { 0: { attr: 0x81, char: 0x82 } },
@@ -372,7 +374,7 @@ describe("register", () => {
     /* Before Neo Angband 0.23.0 there was no ctx.registries, so there is nothing
      * to walk. Silence rather than a throw: every tile pack still works. */
     const h = host();
-    plugin.register(h, ctx({ registries: undefined }));
+    specPlugin.register(h, ctx({ registries: undefined }));
     const d = door({ monster: { 0: { attr: 0x81, char: 0x82 } } });
     h.fillers[0](d.fill);
     expect(d.monsterTiles.has(1)).toBe(false);
@@ -380,13 +382,13 @@ describe("register", () => {
 
   it("registers nothing, and says so, on a host with no tile seam", () => {
     const said = [];
-    plugin.register({}, ctx({ log: (m) => said.push(m) }));
+    specPlugin.register({}, ctx({ log: (m) => said.push(m) }));
     expect(said.join()).toMatch(/no tile-filling seam/);
   });
 
   it("honours the player's switch", () => {
     const h = host();
-    plugin.register(h, ctx({ flags: { "linoleum.deriveTiles": false } }));
+    specPlugin.register(h, ctx({ flags: { "linoleum.deriveTiles": false } }));
     expect(h.fillers.length).toBe(0);
   });
 
@@ -401,7 +403,8 @@ describe("register", () => {
     expect(readFileSync(new URL("./plugin.js", import.meta.url), "utf8")).toContain(
       '"linoleum.deriveTiles"',
     );
-    expect(manifest.capabilities).toContain("registry:tiles");
+    /* The tile rules wait on the game (LN-1, LN-2), so nothing here asks for the tiles capability yet. */
+    expect(manifest.capabilities).toEqual([]);
     expect(manifest.facets).toContain("plugin");
     expect(manifest.fields).toContainEqual({
       name: "no-object-kin-fill",
@@ -839,14 +842,14 @@ describe("the shapechange rule, through register", () => {
      * which is what a game too old to resolve the rule reports. */
     for (const flags of [{}, { "linoleum.shapeTiles": false }, { "linoleum.shapeTiles": "yes" }]) {
       const h = shapeHost();
-      plugin.register(h, ctx({ flags }));
+      specPlugin.register(h, ctx({ flags }));
       expect(h.providers.length, JSON.stringify(flags)).toBe(0);
     }
   });
 
   it("registers one provider, which answers once a pack has loaded", () => {
     const h = shapeHost();
-    plugin.register(h, ctx());
+    specPlugin.register(h, ctx());
     expect(h.providers.length).toBe(1);
 
     /* Before any pack has loaded there is no table, so the pack's own tile is
@@ -866,7 +869,7 @@ describe("the shapechange rule, through register", () => {
      * character back to that sheet's player picture. The table is the only thing
      * the provider can answer from, so clearing it is the whole mechanism. */
     const h = shapeHost();
-    plugin.register(h, ctx());
+    specPlugin.register(h, ctx());
     h.fillers[0](shapeDoor(allTierMonsters()).fill);
     expect(h.providers[0]({ shape: "bear", level: 50, cls: "Druid", race: "Elf" })).not.toBeNull();
 
@@ -877,7 +880,7 @@ describe("the shapechange rule, through register", () => {
   it("says so, once, on a game with the fill door and not the player door", () => {
     const said = [];
     const h = shapeHost({ noPlayerDoor: true });
-    plugin.register(h, ctx({ log: (m) => said.push(m) }));
+    specPlugin.register(h, ctx({ log: (m) => said.push(m) }));
     expect(said.join()).toMatch(/no player-tile seam/);
     /* And the kin rule is untouched: everything else in this mod still works. */
     expect(h.fillers.length).toBe(1);
@@ -886,14 +889,14 @@ describe("the shapechange rule, through register", () => {
   it("says nothing about the player door when the rule is off", () => {
     const said = [];
     const h = shapeHost({ noPlayerDoor: true });
-    plugin.register(h, ctx({ flags: {}, log: (m) => said.push(m) }));
+    specPlugin.register(h, ctx({ flags: {}, log: (m) => said.push(m) }));
     expect(said.join()).not.toMatch(/player-tile seam/);
   });
 
   it("reports what it drew, and which bands fell back", () => {
     const said = [];
     const h = shapeHost();
-    plugin.register(h, ctx({ log: (m) => said.push(m) }));
+    specPlugin.register(h, ctx({ log: (m) => said.push(m) }));
     h.fillers[0](shapeDoor(allTierMonsters().filter((n) => n !== "doombat")).fill);
     expect(said.join("\n")).toMatch(/drew \d+ shapechange tile\(s\) for a Elf Druid/);
     expect(said.join("\n")).toMatch(/bat\/doombat/);
@@ -904,7 +907,7 @@ describe("the shapechange rule, through register", () => {
      * rule being off, which is the question somebody would be asking. */
     const said = [];
     const h = shapeHost();
-    plugin.register(
+    specPlugin.register(
       h,
       ctx({
         log: (m) => said.push(m),
@@ -921,7 +924,7 @@ describe("the shapechange rule, through register", () => {
      * wrong in this project before: an early return for one flag took the other
      * feature with it. */
     const h = shapeHost();
-    plugin.register(h, ctx({ flags: { "linoleum.deriveTiles": false, "linoleum.shapeTiles": true } }));
+    specPlugin.register(h, ctx({ flags: { "linoleum.deriveTiles": false, "linoleum.shapeTiles": true } }));
     expect(h.fillers.length).toBe(1);
     expect(h.providers.length).toBe(1);
     const d = shapeDoor(allTierMonsters());
@@ -934,14 +937,14 @@ describe("the shapechange rule, through register", () => {
     expect(h.providers[0]({ shape: "bear", level: 20, cls: "Druid", race: "Elf" })).not.toBeNull();
 
     const both = shapeHost();
-    plugin.register(both, ctx({ flags: { "linoleum.deriveTiles": true } }));
+    specPlugin.register(both, ctx({ flags: { "linoleum.deriveTiles": true } }));
     expect(both.fillers.length).toBe(1);
     expect(both.providers.length).toBe(0);
   });
 
   it("registers nothing at all when both rules are off", () => {
     const h = shapeHost();
-    plugin.register(h, ctx({ flags: { "linoleum.deriveTiles": false, "linoleum.shapeTiles": false } }));
+    specPlugin.register(h, ctx({ flags: { "linoleum.deriveTiles": false, "linoleum.shapeTiles": false } }));
     expect(h.fillers.length).toBe(0);
     expect(h.providers.length).toBe(0);
   });
@@ -958,5 +961,41 @@ describe("the shapechange rule, through register", () => {
     expect(readFileSync(new URL("./plugin.js", import.meta.url), "utf8")).toContain(
       '"linoleum.shapeTiles"',
     );
+  });
+});
+
+describe("the mod API 2 entry point", () => {
+  const startWith = (flags) => {
+    const lines = [];
+    plugin.start({ meta: { flags, log: (line) => lines.push(line) } });
+    return lines;
+  };
+
+  it("declares a range this game runs", () => {
+    expect(apiRangeVerdict(plugin.api)).toEqual({ ok: true });
+  });
+
+  it("has a schema 2 manifest the game validates, on the same range", () => {
+    const document = JSON.parse(readFileSync(new URL("./manifest.json", import.meta.url), "utf8"));
+    const manifest = validateManifest(document, { code: ["plugin.js"] });
+    expect(manifest.api).toBe(plugin.api);
+    expect(document.data.engine.range).toBe(">=1.22.0");
+  });
+
+  it("says in the log which tile rules are on and cannot apply, and only those", () => {
+    const kin = startWith({ "linoleum.deriveTiles": true });
+    expect(kin).toHaveLength(1);
+    expect(kin[0]).toContain("LN-1");
+    expect(startWith({})[0]).toContain("LN-1");
+    expect(startWith({ "linoleum.deriveTiles": false })).toEqual([]);
+    const both = startWith({ "linoleum.deriveTiles": true, "linoleum.shapeTiles": true });
+    expect(both).toHaveLength(2);
+    expect(both[1]).toContain("LN-2");
+    expect(startWith({ "linoleum.deriveTiles": false, "linoleum.shapeTiles": true })).toHaveLength(1);
+  });
+
+  it("keeps the tile rules' wiring as a specification outside the archive", () => {
+    const root = readFileSync(new URL("./tools/pack.mjs", import.meta.url), "utf8");
+    expect(root).not.toContain("spec-register");
   });
 });

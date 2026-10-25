@@ -27,7 +27,8 @@ import { tmpdir } from "node:os";
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { describe, expect, it } from "vitest";
-import plugin, { SHAPE_TIERS, paletteFor, shapeTileFor, tierFor } from "./plugin.js";
+import { SHAPE_TIERS, paletteFor, shapeTileFor, tierFor } from "./plugin.js";
+import specPlugin from "./spec-register.js";
 
 const HERE = fileURLToPath(new URL(".", import.meta.url));
 const GAME = join(HERE, "..", "neo-angband");
@@ -199,7 +200,7 @@ describe("the real plugin against the real door", () => {
     const problems = [];
     const logs = [];
     const registry = new TileFillerRegistry((owner, why) => problems.push(`${owner}: ${why}`));
-    plugin.register({ tiles: registry.forOwner("linoleum") }, {
+    specPlugin.register({ tiles: registry.forOwner("linoleum") }, {
       id: "linoleum",
       flags: {},
       log: (m) => logs.push(m),
@@ -257,7 +258,7 @@ describe("the real plugin against the real door", () => {
       Array.from({ length: slots }, (_, i) => ({ kind: "asset", asset: `slot-${i}` })),
     );
     const door = shapeRegistry.forOwner("linoleum");
-    plugin.register(
+    specPlugin.register(
       {
         tiles: {
           register: (filler) => door.register(filler),

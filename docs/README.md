@@ -23,10 +23,10 @@ Kin fill is the default for new mod-added content. When a relative's tile would 
 
 ## What it needs
 
-- **Engine:** `>=1.21.1`
+- **Engine:** `>=1.22.0`
 - **Shape:** `tiles`
 - **Facets:** `tiles`, `plugin`
-- **Capabilities:** `registry:tiles`
+- **Capabilities:** none
 
 What a capability string permits, and what a mod that asks for one cannot do
 without it, is in [the mod lifecycle
