@@ -26,13 +26,15 @@
  * sheets, content this mod knows nothing about stays a letter, which is the
  * honest answer for art that is not this mod's to guess at.
  *
+ * ON MOD API 2 these two rules wait. The game gives a mod no tile filler and no
+ * player-tile provider (gap register rows LN-1 and LN-2), so the entry point at
+ * the bottom of this file logs that a rule is on and cannot apply. The functions
+ * in this file stay exported and tested; spec-register.js holds the wiring the
+ * game's additions must match.
+ *
  * WHAT AN AUTHOR SHOULD DO INSTEAD. Ship tiles with your content. This is a
  * fallback for the mods that do not, not a substitute for drawing an orc.
  */
-
-import { characterOf, createAdapter } from "./core-adapter.js";
-
-export { characterOf };
 
 /**
  * The hue rotations a derived tile takes, in the order they are handed out.
@@ -533,92 +535,27 @@ export function shapeTileFor(table, view) {
   return chosen;
 }
 
+/** The tile rules this game cannot carry yet, with the register row that asks for each. */
+const WAITING = [
+  ["linoleum.deriveTiles", "LN-1", "kin fill for added creatures and items"],
+  ["linoleum.shapeTiles", "LN-2", "shapechange tiles for the character"],
+];
+
+/**
+ * The entry point is a mod API 2 definition. The tile packs this mod ships are
+ * data the game reads from the manifest, so they need no code. The two rules
+ * above need a tile filler and a player-tile provider, which API 2 does not
+ * offer a mod, so `start` says in the log that a rule is on and cannot apply.
+ */
 export default {
-  api: 1,
+  api: ">=2.0.0 <3.0.0",
 
-  register(host, ctx) {
-    const { meta, view, content, engine } = createAdapter(ctx);
-    const flags = meta.flags;
-
-    /* An older game has no tile door at all. Say so once rather than throwing:
-     * every tile pack in this mod still works, and the fallback art is the only
-     * thing missing. */
-    if (!engine.hasTileDoor(host)) {
-      meta.log("this game has no tile-filling seam, so modded content keeps its letter");
-      return;
+  start(mod) {
+    const flags = mod.meta.flags;
+    for (const [flag, row, what] of WAITING) {
+      /* The kin rule is on unless the player turned it off; shape tiles are on only when the player said so. */
+      const on = flag === "linoleum.deriveTiles" ? flags[flag] !== false : flags[flag] === true;
+      if (on) mod.meta.log(`${what} is on, but this game cannot apply it yet (gap ${row}), so it changes nothing`);
     }
-
-    const kin = !(flags && flags["linoleum.deriveTiles"] === false);
-
-    /* ON ONLY WHEN THE PLAYER SAID SO, where the kin rule is on by default, and
-     * the difference between the two is the reason. The kin rule fills a tile
-     * that would otherwise be a LETTER, so it can only add; this one REPLACES
-     * the picture the pack draws for the character, which is not what somebody
-     * installing a tile set asked for. `!== true` rather than `!== false`, so a
-     * game too old to resolve the rule at all leaves it off. */
-    const wantShapes = !!(flags && flags["linoleum.shapeTiles"] === true);
-    /* An older game has the fill door but not the player door. Everything else
-     * here still works, so this is a line in the log rather than a refusal - and
-     * it is only said when the player turned the rule on, because otherwise it
-     * would be noise about a feature nobody asked for. */
-    const canShape = engine.hasPlayerDoor(host);
-    if (wantShapes && !canShape) {
-      meta.log("this game has no player-tile seam, so a shapechanged character keeps its own picture");
-    }
-    const shapes = wantShapes && canShape;
-
-    if (!kin && !shapes) return;
-
-    /* Rebuilt by the filler on every pack load and CLEARED first, so a pack this
-     * mod has no business drawing for leaves the character alone: the table is
-     * the only thing the provider can answer from. */
-    let shapeTable = null;
-
-    if (shapes) {
-      /* Registered once, outside the filler, because a provider is a lookup and
-       * the thing it looks in is what the filler rebuilds. Registering it inside
-       * would tie "is there a provider" to "has a pack loaded yet". */
-      engine.registerPlayerTile(host, (drawn) => shapeTileFor(shapeTable, drawn));
-    }
-
-    engine.registerTileFiller(host, (fill) => {
-      shapeTable = null;
-      /* NOT THIS MOD'S ART TO GUESS AT. A linoleum pack is this mod's, converted or
-       * hand-authored, and a fill there is a decision this mod is entitled to make.
-       * A tilesheet is Angband's own fixed atlas, where the honest answer for
-       * content it predates is the letter the game would draw anyway. */
-      if (fill.pack.engine !== "linoleum") return;
-      const registries = content.tables();
-      /* Before Neo Angband 0.23.0 a plugin could not ask what the game was made
-       * of, so there is nothing to walk and nothing to fill. */
-      if (!registries) return;
-      if (kin) {
-        const filled = fillFromKin(fill, registries);
-        if (filled.monsters > 0 || filled.objects > 0) {
-          meta.log(
-            `drew ${filled.monsters} added creature(s) and ${filled.objects} added item(s) ` +
-              `from their nearest kin in ${fill.pack.menuname}`,
-          );
-        }
-      }
-      if (!shapes) return;
-      /* AFTER the kin fill, so a shape whose creature was itself supplied by
-       * that rule borrows the tile it just got rather than nothing. Nothing in
-       * stock content needs that; a content mod replacing a werewolf would. */
-      const table = buildShapeTiles(fill, registries, view.player());
-      if (table === null) {
-        /* No live character, or a class or race this mod has no palette for -
-         * a content mod's own class. Said once per pack load, because a silent
-         * nothing is indistinguishable from the rule being off. */
-        meta.log("no shape palette for this character, so a shapechanged form keeps its own picture");
-        return;
-      }
-      shapeTable = table;
-      meta.log(
-        `drew ${table.drawn} shapechange tile(s) for a ${table.race} ${table.cls} in ` +
-          `${fill.pack.menuname}` +
-          (table.absent.length > 0 ? `; ${table.absent.length} band(s) fell back: ${table.absent.join(", ")}` : ""),
-      );
-    });
   },
 };

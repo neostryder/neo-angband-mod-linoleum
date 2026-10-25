@@ -75,12 +75,11 @@ It also does five things a fixed sheet cannot:
 
 ## Tiles for modded content
 
+The game's mod API 2 has no tile filler or player-tile provider for a mod to register, so the two rules in this section are specified and tested but do not apply yet. The log says so at start. The six tile packs work as before.
+
 ```mermaid
 flowchart TD
-  REG["register"] --> ADAPT["createAdapter<br/>core-adapter.js"]
-  ADAPT --> DOOR{"host.tiles.register exists"}
-  DOOR -->|"no"| LOG["Log missing seam and return"]
-  DOOR -->|"yes"| FLAGS["Read deriveTiles and shapeTiles"]
+  REG["Tile filler registration<br/>specified in spec-register.js, waiting on the game"] --> FLAGS["Read deriveTiles and shapeTiles"]
   FLAGS --> ACTIVE{"Kin fill or shape tiles enabled"}
   ACTIVE -->|"no"| RETURN["Return"]
   ACTIVE -->|"yes"| FILL["Register tile filler"]
@@ -102,7 +101,7 @@ flowchart TD
   WALK -->|"After kin fill"| SHAPES
 ```
 
-*Source of truth: `plugin.js` and `core-adapter.js`. The filler only adds tiles for mod-added records; explicit target-map tiles keep their slots.*
+*Source of truth: `plugin.js` and `spec-register.js`. The filler only adds tiles for mod-added records; explicit target-map tiles keep their slots.*
 
 See the [settings reference](SETTINGS.md) for every flag, its default, and when a change takes effect.
 
@@ -163,7 +162,7 @@ flowchart TD
   PICK --> RESULT["Mirrored shape tile"]
 ```
 
-*Source of truth: `plugin.js`, `core-adapter.js`, and `manifest.json`. Shape tiles are off by default, and a missing donor falls back to a lower tier or the pack's own player tile.*
+*Source of truth: `plugin.js`, `spec-register.js`, and `manifest.json`. Shape tiles are off by default, and a missing donor falls back to a lower tier or the pack's own player tile.*
 
 **Off by default.** "Draw a shapechanged character as the creature", in this mod's
 options.
@@ -389,9 +388,9 @@ A loose pack is one PNG per tile, but the shipped input is an atlas plus a JSON 
 
 One archive per source atlas, rather than a single archive for everything, means a failed digest names the source that failed, and a fix rewrites only that archive. Shockbolt's one atlas serves two rows, so it gets one archive rather than a duplicated pair.
 
-The mod's six root files get an archive of their own. An installed mod's file list is whatever its archives contained, and the game's shared validator expects a top-level `manifest.json` from every source, so the root files have to be in some archive. Putting them in all six would make them collide, because the installer rejects a path that arrives from two archives instead of silently keeping the last one. `tools/pack.mjs --verify` fails if any committed archive has drifted from freshly staged source art, and CI runs it on every push.
+The mod's five root files get an archive of their own. An installed mod's file list is whatever its archives contained, and the game's shared validator expects a top-level `manifest.json` from every source, so the root files have to be in some archive. Putting them in all six would make them collide, because the installer rejects a path that arrives from two archives instead of silently keeping the last one. `tools/pack.mjs --verify` fails if any committed archive has drifted from freshly staged source art, and CI runs it on every push.
 
-This README is shipped content. `manifest.json`, `plugin.js`, `core-adapter.js`, `README.md`, `LICENSE.md` and `CREDITS.md` are the six files inside `neo-linoleum-mod.zip`, so editing any of them, even to fix a typo or a link, changes that archive's digest and leaves the committed copy stale. Re-run `node tools/pack.mjs` in the same commit, because a documentation-only change here is still a build.
+This README is shipped content. `manifest.json`, `plugin.js`, `README.md`, `LICENSE.md` and `CREDITS.md` are the five files inside `neo-linoleum-mod.zip`, so editing any of them, even to fix a typo or a link, changes that archive's digest and leaves the committed copy stale. Re-run `node tools/pack.mjs` in the same commit, because a documentation-only change here is still a build.
 
 The zips are written deterministically (sorted entries, fixed timestamps, stdlib `zlib` only), so the digest depends only on content and a rebuild anywhere gives the same bytes. Two builds into different directories produced six identical files.
 

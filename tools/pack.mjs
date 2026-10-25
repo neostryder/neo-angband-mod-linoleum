@@ -56,7 +56,6 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const ROOT_FILES = [
   "manifest.json",
   "plugin.js",
-  "core-adapter.js", // plugin.js imports it
   "README.md",
   "LICENSE.md",
   "CREDITS.md",
