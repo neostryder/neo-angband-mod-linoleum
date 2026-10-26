@@ -75,11 +75,11 @@ It also does five things a fixed sheet cannot:
 
 ## Tiles for modded content
 
-The game's mod API 2 has no tile filler or player-tile provider for a mod to register, so the two rules in this section are specified and tested but do not apply yet. The log says so at start. The six tile packs work as before.
+Both rules in this section reach the game through the `engineTiles` declaration, which needs the "Supply tiles for creatures and items your tile set does not draw" permission. A tile set the mod did not convert, such as the game's own tile sheets, is never touched.
 
 ```mermaid
 flowchart TD
-  REG["Tile filler registration<br/>specified in spec-register.js, waiting on the game"] --> FLAGS["Read deriveTiles and shapeTiles"]
+  REG["engineTiles declaration<br/>plugin.js"] --> FLAGS["Read deriveTiles and shapeTiles"]
   FLAGS --> ACTIVE{"Kin fill or shape tiles enabled"}
   ACTIVE -->|"no"| RETURN["Return"]
   ACTIVE -->|"yes"| FILL["Register tile filler"]
@@ -101,7 +101,7 @@ flowchart TD
   WALK -->|"After kin fill"| SHAPES
 ```
 
-*Source of truth: `plugin.js` and `spec-register.js`. The filler only adds tiles for mod-added records; explicit target-map tiles keep their slots.*
+*Source of truth: `plugin.js`. The filler only adds tiles for mod-added records; explicit target-map tiles keep their slots.*
 
 See the [settings reference](SETTINGS.md) for every flag, its default, and when a change takes effect.
 
@@ -162,7 +162,7 @@ flowchart TD
   PICK --> RESULT["Mirrored shape tile"]
 ```
 
-*Source of truth: `plugin.js`, `spec-register.js`, and `manifest.json`. Shape tiles are off by default, and a missing donor falls back to a lower tier or the pack's own player tile.*
+*Source of truth: `plugin.js` and `manifest.json`. Shape tiles are off by default, and a missing donor falls back to a lower tier or the pack's own player tile.*
 
 **Off by default.** "Draw a shapechanged character as the creature", in this mod's
 options.

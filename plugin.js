@@ -26,11 +26,9 @@
  * sheets, content this mod knows nothing about stays a letter, which is the
  * honest answer for art that is not this mod's to guess at.
  *
- * ON MOD API 2 these two rules wait. The game gives a mod no tile filler and no
- * player-tile provider (gap register rows LN-1 and LN-2), so the entry point at
- * the bottom of this file logs that a rule is on and cannot apply. The functions
- * in this file stay exported and tested; spec-register.js holds the wiring the
- * game's additions must match.
+ * ON MOD API 2 the two rules arrive through `engineTiles` at the bottom of this
+ * file, which the game accepts from a mod holding the registry:tiles capability.
+ * The functions above it are pure and tested on their own.
  *
  * WHAT AN AUTHOR SHOULD DO INSTEAD. Ship tiles with your content. This is a
  * fallback for the mods that do not, not a substitute for drawing an orc.
@@ -535,27 +533,103 @@ export function shapeTileFor(table, view) {
   return chosen;
 }
 
-/** The tile rules this game cannot carry yet, with the register row that asks for each. */
-const WAITING = [
-  ["linoleum.deriveTiles", "LN-1", "kin fill for added creatures and items"],
-  ["linoleum.shapeTiles", "LN-2", "shapechange tiles for the character"],
-];
+/** The class and race of the character in a live game state, or null. */
+export function characterOf(state) {
+  const player = state && state.actor ? state.actor.player : null;
+  if (!player || !player.cls || !player.race) return null;
+  const cls = player.cls.name;
+  const race = player.race.name;
+  return typeof cls === "string" && typeof race === "string" ? { cls, race } : null;
+}
+
+/**
+ * The two tile rules as the game's `engineTiles` declaration: a filler the game
+ * calls with a live TileFill on every pack load, and a player-tile provider it
+ * asks for the character being drawn. Undefined when both rules are off.
+ *
+ * The kin rule is on unless the player turned it off. Shape tiles are on ONLY
+ * when the player said so, where the kin rule is on by default, and the
+ * difference is the reason. The kin rule fills a tile that would otherwise be a
+ * LETTER, so it can only add; the shape rule REPLACES the picture the pack draws
+ * for the character, which is not what somebody installing a tile set asked for.
+ * `=== true` rather than `!== false`, so a game too old to resolve the rule at
+ * all leaves it off.
+ *
+ * `log` is the mod's own log line writer, given by `start`; until then a line
+ * has nowhere to go.
+ */
+export function tileRules(flags, engine, log) {
+  const kin = !(flags && flags["linoleum.deriveTiles"] === false);
+  const wantShapes = !!(flags && flags["linoleum.shapeTiles"] === true);
+  if (!kin && !wantShapes) return undefined;
+
+  /* Rebuilt by the filler on every pack load and CLEARED first, so a pack this
+   * mod has no business drawing for leaves the character alone: the table is the
+   * only thing the provider can answer from. */
+  let shapeTable = null;
+
+  const rules = {
+    filler(fill) {
+      shapeTable = null;
+      /* NOT THIS MOD'S ART TO GUESS AT. A linoleum pack is this mod's, converted
+       * or hand-authored, and a fill there is a decision this mod is entitled to
+       * make. A tilesheet is Angband's own fixed atlas, where the honest answer
+       * for content it predates is the letter the game would draw anyway. */
+      if (fill.pack.engine !== "linoleum") return;
+      const registries = engine.registries;
+      if (!registries) return;
+      if (kin) {
+        const filled = fillFromKin(fill, registries);
+        if (filled.monsters > 0 || filled.objects > 0) {
+          log(
+            `drew ${filled.monsters} added creature(s) and ${filled.objects} added item(s) ` +
+              `from their nearest kin in ${fill.pack.menuname}`,
+          );
+        }
+      }
+      if (!wantShapes) return;
+      /* AFTER the kin fill, so a shape whose creature was itself supplied by that
+       * rule borrows the tile it just got rather than nothing. Nothing in stock
+       * content needs that; a content mod replacing a werewolf would. */
+      const table = buildShapeTiles(fill, registries, characterOf(engine.state));
+      if (table === null) {
+        /* No live character, or a class or race this mod has no palette for - a
+         * content mod's own class. Said once per pack load, because a silent
+         * nothing is indistinguishable from the rule being off. */
+        log("no shape palette for this character, so a shapechanged form keeps its own picture");
+        return;
+      }
+      shapeTable = table;
+      log(
+        `drew ${table.drawn} shapechange tile(s) for a ${table.race} ${table.cls} in ` +
+          `${fill.pack.menuname}` +
+          (table.absent.length > 0 ? `; ${table.absent.length} band(s) fell back: ${table.absent.join(", ")}` : ""),
+      );
+    },
+  };
+  /* Declared once, outside the filler, because a provider is a lookup and the
+   * thing it looks in is what the filler rebuilds. */
+  if (wantShapes) rules.player = (view) => shapeTileFor(shapeTable, view);
+  return rules;
+}
+
+/** The mod's log line writer, set by `start`; a line said before then is dropped. */
+let say = () => undefined;
 
 /**
  * The entry point is a mod API 2 definition. The tile packs this mod ships are
  * data the game reads from the manifest, so they need no code. The two rules
- * above need a tile filler and a player-tile provider, which API 2 does not
- * offer a mod, so `start` says in the log that a rule is on and cannot apply.
+ * above need a tile filler and a player-tile provider, which the game takes
+ * from `engineTiles` once the mod holds the registry:tiles capability.
  */
 export default {
   api: ">=2.0.0 <3.0.0",
 
+  engineTiles({ flags, engine }) {
+    return tileRules(flags, engine, (line) => say(line));
+  },
+
   start(mod) {
-    const flags = mod.meta.flags;
-    for (const [flag, row, what] of WAITING) {
-      /* The kin rule is on unless the player turned it off; shape tiles are on only when the player said so. */
-      const on = flag === "linoleum.deriveTiles" ? flags[flag] !== false : flags[flag] === true;
-      if (on) mod.meta.log(`${what} is on, but this game cannot apply it yet (gap ${row}), so it changes nothing`);
-    }
+    say = (line) => mod.meta.log(line);
   },
 };

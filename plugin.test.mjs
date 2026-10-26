@@ -403,8 +403,8 @@ describe("register", () => {
     expect(readFileSync(new URL("./plugin.js", import.meta.url), "utf8")).toContain(
       '"linoleum.deriveTiles"',
     );
-    /* The tile rules wait on the game (LN-1, LN-2), so nothing here asks for the tiles capability yet. */
-    expect(manifest.capabilities).toEqual([]);
+    /* Both tile rules arrive through engineTiles, which the game takes from a mod holding registry:tiles. */
+    expect(manifest.capabilities).toEqual(["registry:tiles"]);
     expect(manifest.facets).toContain("plugin");
     expect(manifest.fields).toContainEqual({
       name: "no-object-kin-fill",
@@ -982,16 +982,75 @@ describe("the mod API 2 entry point", () => {
     expect(document.data.engine.range).toBe(">=1.22.0");
   });
 
-  it("says in the log which tile rules are on and cannot apply, and only those", () => {
-    const kin = startWith({ "linoleum.deriveTiles": true });
-    expect(kin).toHaveLength(1);
-    expect(kin[0]).toContain("LN-1");
-    expect(startWith({})[0]).toContain("LN-1");
-    expect(startWith({ "linoleum.deriveTiles": false })).toEqual([]);
-    const both = startWith({ "linoleum.deriveTiles": true, "linoleum.shapeTiles": true });
-    expect(both).toHaveLength(2);
-    expect(both[1]).toContain("LN-2");
-    expect(startWith({ "linoleum.deriveTiles": false, "linoleum.shapeTiles": true })).toHaveLength(1);
+  const engineOf = (over = {}) => ({
+    registries: { monsters: { races: races({ name: "giant ant", base: "ant" }, { name: "joiner ant", base: "ant", from: MOD }) }, objects: { kinds: [] } },
+    state: { actor: { player: { cls: { name: "Druid" }, race: { name: "Elf" } } } },
+    ...over,
+  });
+
+  it("declares engineTiles, and nothing the game would refuse beside it", () => {
+    expect(typeof plugin.engineTiles).toBe("function");
+    expect(plugin.hooks).toBeUndefined();
+    expect(plugin.policies).toBeUndefined();
+  });
+
+  it("declares a filler for the kin rule, which is on unless the player turned it off", () => {
+    for (const flags of [{}, { "linoleum.deriveTiles": true }]) {
+      const rules = plugin.engineTiles({ flags, engine: engineOf() });
+      expect(typeof rules.filler, JSON.stringify(flags)).toBe("function");
+      expect(rules.player).toBeUndefined();
+    }
+    expect(plugin.engineTiles({ flags: { "linoleum.deriveTiles": false }, engine: engineOf() })).toBeUndefined();
+  });
+
+  it("declares the player-tile provider only when the player asked for shape tiles", () => {
+    expect(typeof plugin.engineTiles({ flags: { "linoleum.shapeTiles": true }, engine: engineOf() }).player).toBe("function");
+    expect(plugin.engineTiles({ flags: { "linoleum.shapeTiles": "yes" }, engine: engineOf() }).player).toBeUndefined();
+    const only = plugin.engineTiles({ flags: { "linoleum.deriveTiles": false, "linoleum.shapeTiles": true }, engine: engineOf() });
+    expect(typeof only.filler).toBe("function");
+    expect(typeof only.player).toBe("function");
+  });
+
+  it("fills added content from its kin in a linoleum pack and says so in the log", () => {
+    const lines = [];
+    plugin.start({ meta: { flags: {}, log: (line) => lines.push(line) } });
+    const d = door({ monster: { 0: { attr: 0x81, char: 0x82 } } });
+    plugin.engineTiles({ flags: {}, engine: engineOf() }).filler(d.fill);
+    expect(d.monsterTiles.get(1)).toBeDefined();
+    expect(lines).toEqual(["drew 1 added creature(s) and 0 added item(s) from their nearest kin in Test"]);
+  });
+
+  it("leaves a tilesheet pack, and a game with no registries, alone", () => {
+    const rules = plugin.engineTiles({ flags: {}, engine: engineOf() });
+    const sheet = door({ pack: { engine: "tilesheet", id: "s", menuname: "Sheet" }, monster: { 0: { attr: 0x81, char: 0x82 } } });
+    rules.filler(sheet.fill);
+    expect(sheet.monsterTiles.has(1)).toBe(false);
+    const bare = door({ monster: { 0: { attr: 0x81, char: 0x82 } } });
+    plugin.engineTiles({ flags: {}, engine: engineOf({ registries: undefined }) }).filler(bare.fill);
+    expect(bare.monsterTiles.has(1)).toBe(false);
+  });
+
+  it("builds the shape table from the live character and answers from it", () => {
+    const lines = [];
+    plugin.start({ meta: { flags: {}, log: (line) => lines.push(line) } });
+    const shapeRaces = [...new Set(Object.values(SHAPE_TIERS).flat().map((t) => t.monster))];
+    const registries = { monsters: { races: shapeRaces.map((name, ridx) => ({ ridx, name, base: { name: "x" } })) }, objects: { kinds: [] } };
+    const donors = Object.fromEntries(shapeRaces.map((_, i) => [i, { attr: 0x81, char: 0x80 + i }]));
+    const d = door({ monster: donors });
+    const rules = plugin.engineTiles({ flags: { "linoleum.deriveTiles": false, "linoleum.shapeTiles": true }, engine: engineOf({ registries }) });
+    expect(rules.player({ shape: "werewolf", level: 50, cls: "Druid", race: "Elf" })).toBeNull();
+    rules.filler(d.fill);
+    expect(rules.player({ shape: "werewolf", level: 50, cls: "Druid", race: "Elf" })).not.toBeNull();
+    expect(rules.player({ shape: "werewolf", level: 50, cls: "Mage", race: "Elf" })).toBeNull();
+    expect(lines.some((line) => line.startsWith("drew ") && line.includes("shapechange tile(s) for a Elf Druid in Test"))).toBe(true);
+  });
+
+  it("says when the character has no palette, and clears the table for a pack that is not this mod's", () => {
+    const lines = [];
+    plugin.start({ meta: { flags: {}, log: (line) => lines.push(line) } });
+    const rules = plugin.engineTiles({ flags: { "linoleum.deriveTiles": false, "linoleum.shapeTiles": true }, engine: engineOf({ state: undefined }) });
+    rules.filler(door().fill);
+    expect(lines).toEqual(["no shape palette for this character, so a shapechanged form keeps its own picture"]);
   });
 
   it("keeps the tile rules' wiring as a specification outside the archive", () => {

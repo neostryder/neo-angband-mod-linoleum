@@ -2,24 +2,16 @@
  * Test support, not part of the mod: the tile policy as the API 1 registry host
  * ran it.
  *
- * The mod itself is an API 2 definition (plugin.js). Kin fill and shapechange
- * tiles need a tile filler and a player-tile provider, and API 2 gives a mod
- * neither (gap register rows LN-1 and LN-2), so plugin.js says in the log that
- * they are waiting. This file keeps their wiring, driven by plugin.js's own
- * pure functions, so the suites keep checking what the game's additions must
- * match. It is not in the archive.
+ * The mod itself is an API 2 definition (plugin.js), which declares the kin fill
+ * and the shapechange tiles through `engineTiles`. This file keeps the same
+ * rules wired to the API 1 registry host, driven by plugin.js's own pure
+ * functions, so the suites keep checking the two doors agree. It is not in the
+ * archive.
  */
 
-import { buildShapeTiles, fillFromKin, shapeTileFor } from "./plugin.js";
+import { buildShapeTiles, characterOf, fillFromKin, shapeTileFor } from "./plugin.js";
 
-/** The class and race of the character in a live game state, or null. */
-export function characterOf(state) {
-  const player = state && state.actor ? state.actor.player : null;
-  if (!player || !player.cls || !player.race) return null;
-  const cls = player.cls.name;
-  const race = player.race.name;
-  return typeof cls === "string" && typeof race === "string" ? { cls, race } : null;
-}
+export { characterOf };
 
 /** Build the adapter from `register()`'s context. Members that read live state read it when called. */
 export function createAdapter(ctx) {
