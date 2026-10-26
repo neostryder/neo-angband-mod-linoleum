@@ -26,6 +26,10 @@ were not retagged.
 
 ## [Unreleased]
 
+### Changed
+
+- [Visible] [Modding-API] Modded creatures and items without a tile of their own are now drawn from their nearest relative, and a shapechanged character can be drawn as the creature, as the two rules always described. Linoleum now asks to be allowed to supply tiles; until now it only logged that it could not.
+
 ## 1.5.0 - 2026-10-01
 
 ### Added
