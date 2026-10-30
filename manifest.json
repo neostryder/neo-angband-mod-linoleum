@@ -4,7 +4,7 @@
   "data": {
     "id": "linoleum",
     "name": "Linoleum",
-    "version": "1.5.0",
+    "version": "1.6.0-beta.1",
     "api": ">=2.0.0 <3.0.0",
     "runtime": "in-process",
     "engine": {
@@ -82,7 +82,7 @@
           "key": "original-tiles",
           "packId": "linoleum-original-tiles",
           "displayName": "Original Tiles",
-          "cacheKey": "1.5.0",
+          "cacheKey": "1.6.0-beta.1",
           "image": "source/8x8.png",
           "tileMap": "source/tile-map.json",
           "resolution": 8
@@ -97,7 +97,7 @@
           "key": "adam-bolt",
           "packId": "linoleum-adam-bolt",
           "displayName": "Adam Bolt's tiles",
-          "cacheKey": "1.5.0",
+          "cacheKey": "1.6.0-beta.1",
           "image": "source/16x16.png",
           "tileMap": "source/tile-map.json",
           "resolution": 16
@@ -112,7 +112,7 @@
           "key": "gervais",
           "packId": "linoleum-gervais",
           "displayName": "David Gervais' tiles",
-          "cacheKey": "1.5.0",
+          "cacheKey": "1.6.0-beta.1",
           "image": "source/32x32.png",
           "tileMap": "source/tile-map.json",
           "resolution": 32
@@ -127,7 +127,7 @@
           "key": "nomad",
           "packId": "linoleum-nomad",
           "displayName": "Nomad's tiles",
-          "cacheKey": "1.5.0",
+          "cacheKey": "1.6.0-beta.1",
           "image": "source/8x16.png",
           "tileMap": "source/tile-map.json",
           "resolution": 16,
@@ -144,7 +144,7 @@
           "key": "shockbolt-dark",
           "packId": "linoleum-shockbolt-dark",
           "displayName": "Shockbolt Dark",
-          "cacheKey": "1.5.0",
+          "cacheKey": "1.6.0-beta.1",
           "image": "source/64x64.png",
           "tileMap": "source/tile-map-dark.json",
           "resolution": 64,
@@ -161,7 +161,7 @@
           "key": "shockbolt-light",
           "packId": "linoleum-shockbolt-light",
           "displayName": "Shockbolt Light",
-          "cacheKey": "1.5.0",
+          "cacheKey": "1.6.0-beta.1",
           "image": "source/64x64.png",
           "tileMap": "source/tile-map-light.json",
           "resolution": 64,
