@@ -979,7 +979,7 @@ describe("the mod API 2 entry point", () => {
     const document = JSON.parse(readFileSync(new URL("./manifest.json", import.meta.url), "utf8"));
     const manifest = validateManifest(document, { code: ["plugin.js"] });
     expect(manifest.api).toBe(plugin.api);
-    expect(document.data.engine.range).toBe(">=1.22.0");
+    expect(document.data.engine.range).toBe(">=1.23.0-beta.1");
   });
 
   const engineOf = (over = {}) => ({
