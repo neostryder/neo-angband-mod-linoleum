@@ -34,7 +34,7 @@ jobs:
           fi
 
           prerelease=()
-          if [[ "$GITHUB_REF_NAME" == v0.* ]]; then
+          if [[ "$GITHUB_REF_NAME" == v0.* || "$GITHUB_REF_NAME" == *-* ]]; then
             prerelease+=(--prerelease)
           fi
 
