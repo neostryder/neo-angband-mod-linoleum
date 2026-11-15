@@ -382,7 +382,7 @@ point the browser build at it with **Load mod folder**. Unzip the source archive
 `node tools/pack.mjs`.
 
 <details>
-<summary>Why six archives rather than 9149 committed loose files, or one big zip</summary>
+<summary>Why six archives rather than 9161 committed loose files, or one big zip</summary>
 
 A loose pack is one PNG per tile, but the shipped input is an atlas plus a JSON tile map. An `archive` payload is one HTTP request and one digest; the alternative, a `files` payload, would be a request per input file and makes partial installs harder to diagnose.
 
